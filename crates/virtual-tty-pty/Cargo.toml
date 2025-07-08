@@ -1,0 +1,20 @@
+[package]
+name = "virtual-tty-pty"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "PTY integration for virtual-tty - run real processes in virtual terminals"
+
+[dependencies]
+virtual-tty = { path = "../virtual-tty" }
+libc.workspace = true
+
+[[example]]
+name = "pty_ls"
+path = "../../examples/pty_ls.rs"
+
+[[example]]
+name = "pty_interactive"
+path = "../../examples/pty_interactive.rs"

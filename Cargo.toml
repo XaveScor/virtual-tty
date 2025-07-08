@@ -1,0 +1,17 @@
+[workspace]
+members = [
+    "crates/virtual-tty",
+    "crates/virtual-tty-pty"
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/your-username/virtual-tty"
+description = "Virtual TTY library for testing terminal applications"
+
+[workspace.dependencies]
+libc = "0.2"
