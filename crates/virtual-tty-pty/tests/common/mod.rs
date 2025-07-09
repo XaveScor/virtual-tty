@@ -12,7 +12,7 @@ pub fn snapshots_dir_for_tool(tool: &str) -> PathBuf {
     } else {
         panic!("Unsupported platform for PTY tests")
     };
-    
+
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join(tool)
@@ -23,15 +23,15 @@ pub fn snapshots_dir_for_tool(tool: &str) -> PathBuf {
 /// Assert that output matches a snapshot, or create/update the snapshot
 pub fn assert_snapshot_matches(snapshots_dir: &Path, name: &str, actual: &str) {
     let snapshot_path = snapshots_dir.join(format!("{}.snap", name));
-    
+
     // Ensure the snapshots directory exists
     if let Some(parent) = snapshot_path.parent() {
         fs::create_dir_all(parent).expect("Failed to create snapshots directory");
     }
-    
+
     // Normalize the output for consistent snapshots
     let normalized_actual = normalize_output(actual);
-    
+
     match fs::read_to_string(&snapshot_path) {
         Ok(expected) => {
             let normalized_expected = normalize_output(&expected);
@@ -40,7 +40,7 @@ pub fn assert_snapshot_matches(snapshots_dir: &Path, name: &str, actual: &str) {
                 println!("Snapshot mismatch for {}:", name);
                 println!("Expected:\n{}", normalized_expected);
                 println!("Actual:\n{}", normalized_actual);
-                
+
                 // Check if we should update snapshots (via environment variable)
                 if std::env::var("UPDATE_SNAPSHOTS").is_ok() {
                     fs::write(&snapshot_path, &normalized_actual)
@@ -53,8 +53,7 @@ pub fn assert_snapshot_matches(snapshots_dir: &Path, name: &str, actual: &str) {
         }
         Err(_) => {
             // Snapshot doesn't exist, create it
-            fs::write(&snapshot_path, &normalized_actual)
-                .expect("Failed to write new snapshot");
+            fs::write(&snapshot_path, &normalized_actual).expect("Failed to write new snapshot");
             println!("Created new snapshot: {}", snapshot_path.display());
         }
     }
@@ -78,18 +77,14 @@ pub fn create_platform_command(tool: &str) -> Command {
             let mut cmd = Command::new("ls");
             #[cfg(target_os = "linux")]
             cmd.args(&["-la", "--color=always"]);
-            
+
             #[cfg(target_os = "macos")]
             cmd.args(&["-laG"]);
-            
+
             cmd
         }
-        "less" => {
-            Command::new("less")
-        }
-        "vim" => {
-            Command::new("vim")
-        }
+        "less" => Command::new("less"),
+        "vim" => Command::new("vim"),
         _ => panic!("Unsupported tool: {}", tool),
     }
 }
@@ -100,7 +95,7 @@ where
     F: FnOnce(&mut PtyAdapter) -> Result<(), Box<dyn std::error::Error>>,
 {
     let mut pty = PtyAdapter::new(width, height);
-    
+
     match setup_and_run(&mut pty) {
         Ok(_) => pty.get_snapshot(),
         Err(e) => {
@@ -120,29 +115,37 @@ pub fn wait_for_output(pty: &PtyAdapter, duration_ms: u64) -> String {
 /// Generate test content files if they don't exist
 pub fn ensure_test_files_exist() {
     use std::io::Write;
-    
+
     // Generate numbered_lines.txt if it doesn't exist
     if !Path::new("numbered_lines.txt").exists() {
         let mut file = fs::File::create("numbered_lines.txt").expect("Failed to create test file");
         for i in 1..=100 {
-            writeln!(file, "Line {:3}: This is line number {} with some additional content", i, i)
-                .expect("Failed to write to test file");
+            writeln!(
+                file,
+                "Line {:3}: This is line number {} with some additional content",
+                i, i
+            )
+            .expect("Failed to write to test file");
         }
     }
-    
+
     // Generate large_content.txt if it doesn't exist
     if !Path::new("large_content.txt").exists() {
         let mut file = fs::File::create("large_content.txt").expect("Failed to create test file");
         writeln!(file, "LARGE CONTENT FILE FOR TESTING").expect("Failed to write to test file");
         writeln!(file, "================================").expect("Failed to write to test file");
         writeln!(file).expect("Failed to write to test file");
-        
+
         for section in 1..=5 {
             writeln!(file, "SECTION {}", section).expect("Failed to write to test file");
             writeln!(file, "----------").expect("Failed to write to test file");
             for i in 1..=10 {
-                writeln!(file, "Section {} line {}: Content for testing scrolling behavior", section, i)
-                    .expect("Failed to write to test file");
+                writeln!(
+                    file,
+                    "Section {} line {}: Content for testing scrolling behavior",
+                    section, i
+                )
+                .expect("Failed to write to test file");
             }
             writeln!(file).expect("Failed to write to test file");
         }

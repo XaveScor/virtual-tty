@@ -171,7 +171,7 @@ impl VirtualTty {
                 // Cursor position
                 let parts: Vec<&str> = params.split(';').collect();
                 let row = parts
-                    .get(0)
+                    .first()
                     .and_then(|s| s.parse::<usize>().ok())
                     .unwrap_or(1)
                     .saturating_sub(1);
@@ -192,9 +192,19 @@ impl VirtualTty {
                 }
             }
             'K' => {
-                // Clear to end of line
-                for col in *cursor_col..width {
-                    buffer[*cursor_row][col] = ' ';
+                // Clear line operations
+                if params == "1" {
+                    // Clear from beginning of line to cursor position
+                    for col in 0..=*cursor_col {
+                        if col < width {
+                            buffer[*cursor_row][col] = ' ';
+                        }
+                    }
+                } else {
+                    // Clear to end of line (default behavior)
+                    for col in *cursor_col..width {
+                        buffer[*cursor_row][col] = ' ';
+                    }
                 }
             }
             'm' => {

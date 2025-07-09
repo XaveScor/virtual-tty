@@ -56,7 +56,7 @@ impl PtyAdapter {
         unsafe {
             let mut master: libc::c_int = 0;
             let mut slave: libc::c_int = 0;
-            
+
             // Open a new PTY
             let result = libc::openpty(
                 &mut master,
@@ -65,11 +65,11 @@ impl PtyAdapter {
                 std::ptr::null_mut(),
                 std::ptr::null_mut(),
             );
-            
+
             if result != 0 {
                 return Err(io::Error::last_os_error());
             }
-            
+
             // Set window size
             let ws = winsize {
                 ws_row: height as u16,
@@ -77,9 +77,9 @@ impl PtyAdapter {
                 ws_xpixel: 0,
                 ws_ypixel: 0,
             };
-            
+
             let _ = libc::ioctl(master, libc::TIOCSWINSZ, &ws);
-            
+
             self.master_fd = Some(master);
             self.slave_fd = Some(slave);
         }
@@ -101,9 +101,15 @@ impl PtyAdapter {
 
         let reader_thread = thread::spawn(move || {
             let mut read_buffer = [0u8; 4096];
-            
+
             loop {
-                let n = unsafe { libc::read(master_fd, read_buffer.as_mut_ptr() as *mut libc::c_void, read_buffer.len()) };
+                let n = unsafe {
+                    libc::read(
+                        master_fd,
+                        read_buffer.as_mut_ptr() as *mut libc::c_void,
+                        read_buffer.len(),
+                    )
+                };
                 match n {
                     0 => break, // EOF
                     n if n > 0 => {
@@ -122,9 +128,9 @@ impl PtyAdapter {
         self.create_pty()?;
         self.start_reader_thread();
 
-        let slave_fd = self.slave_fd.ok_or_else(|| {
-            io::Error::new(io::ErrorKind::Other, "No slave PTY")
-        })?;
+        let slave_fd = self
+            .slave_fd
+            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No slave PTY"))?;
 
         // Duplicate the slave FD for stdin/stdout/stderr to avoid closing issues
         let slave_stdin = unsafe { libc::dup(slave_fd) };
@@ -148,11 +154,17 @@ impl PtyAdapter {
     }
 
     pub fn send_input(&mut self, input: &[u8]) -> io::Result<()> {
-        let master_fd = self.master_fd.ok_or_else(|| {
-            io::Error::new(io::ErrorKind::Other, "No master PTY")
-        })?;
+        let master_fd = self
+            .master_fd
+            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No master PTY"))?;
 
-        let result = unsafe { libc::write(master_fd, input.as_ptr() as *const libc::c_void, input.len()) };
+        let result = unsafe {
+            libc::write(
+                master_fd,
+                input.as_ptr() as *const libc::c_void,
+                input.len(),
+            )
+        };
         if result < 0 {
             Err(io::Error::last_os_error())
         } else {
@@ -177,12 +189,16 @@ impl Drop for PtyAdapter {
     fn drop(&mut self) {
         // Close PTY file descriptors
         if let Some(fd) = self.master_fd {
-            unsafe { libc::close(fd); }
+            unsafe {
+                libc::close(fd);
+            }
         }
         if let Some(fd) = self.slave_fd {
-            unsafe { libc::close(fd); }
+            unsafe {
+                libc::close(fd);
+            }
         }
-        
+
         // Wait for reader thread to finish
         if let Some(thread) = self.reader_thread.take() {
             let _ = thread.join();
@@ -212,7 +228,7 @@ mod tests {
         let mut adapter = PtyAdapter::new(80, 24);
         let mut cmd = Command::new("echo");
         cmd.arg("Hello PTY");
-        
+
         match adapter.spawn_command(&mut cmd) {
             Ok(mut child) => {
                 let _ = child.wait();

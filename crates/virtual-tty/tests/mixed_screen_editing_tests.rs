@@ -61,10 +61,10 @@ fn test_mixed_clear_line_beginning() {
     let mut tty = VirtualTty::new(10, 3);
     tty.stdout_write("Hello");
     tty.stderr_write("\x1b[2D"); // Move back 2
-    tty.stdout_write("\x1b[1K"); // Clear from beginning of line to cursor (not implemented, so ignored)
+    tty.stdout_write("\x1b[1K"); // Clear from beginning of line to cursor (now implemented)
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HelX");
+    assert_eq!(snapshot, "   Xo");
 }
 
 #[test]
@@ -136,4 +136,34 @@ fn test_mixed_alternating_clear_write() {
     tty.stderr_write("Second");
     let snapshot = tty.get_snapshot();
     assert_eq!(snapshot, "First Second");
+}
+
+#[test]
+fn test_mixed_clear_line_beginning_at_start() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stdout_write("Hello");
+    tty.stderr_write("\x1b[5D"); // Move to start of line
+    tty.stdout_write("\x1b[1K"); // Clear from beginning to cursor (at position 0)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Xello");
+}
+
+#[test]
+fn test_mixed_clear_line_beginning_at_end() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stdout_write("Hello");
+    tty.stderr_write("\x1b[1K"); // Clear from beginning to cursor (at end)
+    tty.stdout_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "     X");
+}
+
+#[test]
+fn test_mixed_clear_line_beginning_empty_line() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stdout_write("\x1b[1K"); // Clear from beginning to cursor on empty line
+    tty.stderr_write("Test");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Test");
 }
