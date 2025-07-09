@@ -185,10 +185,22 @@ impl VirtualTty {
             }
             'J' => {
                 // Clear screen
-                if params == "2" || params.is_empty() {
+                if params == "2" {
+                    // Clear entire screen and move cursor to home
                     *buffer = vec![vec![' '; width]; height];
                     *cursor_row = 0;
                     *cursor_col = 0;
+                } else if params == "0" || params.is_empty() {
+                    // Clear from cursor to end of screen
+                    // Clear rest of current line from cursor position
+                    for col in *cursor_col..width {
+                        buffer[*cursor_row][col] = ' ';
+                    }
+                    // Clear all lines below current cursor row
+                    for row in &mut buffer[(*cursor_row + 1)..height] {
+                        row.fill(' ');
+                    }
+                    // Cursor position remains unchanged
                 }
             }
             'K' => {

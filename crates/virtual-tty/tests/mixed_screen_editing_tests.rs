@@ -167,3 +167,75 @@ fn test_mixed_clear_line_beginning_empty_line() {
     let snapshot = tty.get_snapshot();
     assert_eq!(snapshot, "Test");
 }
+
+#[test]
+fn test_mixed_clear_from_cursor_to_end_of_screen() {
+    let mut tty = VirtualTty::new(10, 4);
+    tty.stdout_write("Line1\nLine2\n");
+    tty.stderr_write("Line3\nLine4");
+    tty.stdout_write("\x1b[2;3H"); // Move to row 2, col 3
+    tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1\nLi");
+}
+
+#[test]
+fn test_mixed_clear_from_cursor_to_end_of_screen_default() {
+    let mut tty = VirtualTty::new(10, 4);
+    tty.stderr_write("Line1\nLine2\n");
+    tty.stdout_write("Line3\nLine4");
+    tty.stderr_write("\x1b[2;3H"); // Move to row 2, col 3
+    tty.stdout_write("\x1b[J"); // Clear from cursor to end of screen (default)
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1\nLi");
+}
+
+#[test]
+fn test_mixed_clear_from_cursor_at_start_of_line() {
+    let mut tty = VirtualTty::new(8, 3);
+    tty.stdout_write("ABCD\n");
+    tty.stderr_write("EFGH\n");
+    tty.stdout_write("IJKL");
+    tty.stderr_write("\x1b[2;1H"); // Move to row 2, col 1
+    tty.stdout_write("\x1b[0J"); // Clear from cursor to end of screen
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "ABCD");
+}
+
+#[test]
+fn test_mixed_clear_from_cursor_preserves_position() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stdout_write("Hello\n");
+    tty.stderr_write("World\n");
+    tty.stdout_write("Test");
+    tty.stderr_write("\x1b[2;2H"); // Move to row 2, col 2
+    tty.stdout_write("\x1b[0J"); // Clear from cursor to end of screen
+    tty.stderr_write("X"); // Should write at cursor position
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Hello\nWX");
+}
+
+#[test]
+fn test_mixed_clear_from_cursor_on_last_line() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Line1\n");
+    tty.stdout_write("Line2\n");
+    tty.stderr_write("Line3");
+    tty.stdout_write("\x1b[3D"); // Move back 3 on last line
+    tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1\nLine2\nLi");
+}
+
+#[test]
+fn test_mixed_clear_from_cursor_with_subsequent_writes() {
+    let mut tty = VirtualTty::new(12, 4);
+    tty.stdout_write("First\nSecond\nThird\nFourth");
+    tty.stderr_write("\x1b[2;4H"); // Move to row 2, col 4
+    tty.stdout_write("\x1b[0J"); // Clear from cursor to end of screen
+    tty.stderr_write("NEW");
+    tty.stdout_write("\x1b[1B"); // Move down 1 line
+    tty.stderr_write("MORE");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "First\nSecNEW\n      MORE");
+}
