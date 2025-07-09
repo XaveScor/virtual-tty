@@ -43,6 +43,13 @@ fn test_my_app() {
   - `ansi/` - ANSI escape sequence parsing and commands
   - `errors.rs` - Error types foundation
 
+### Type-Safe ANSI Parsing
+- **Tokenized Parsing**: Uses `AnsiParser` to convert input into structured tokens
+- **Error Handling**: Proper error types with `ParseError` enum for validation failures
+- **Token Types**: `Token` enum with `Text`, `Command`, `ControlChar`, and `Invalid` variants
+- **Command Validation**: All ANSI commands are validated before execution
+- **Fallback Support**: Legacy parser maintained for backward compatibility
+
 ### Testing Strategy
 - **Unit Tests**: Platform-independent tests using direct VirtualTty API calls
 - **No External Dependencies**: Tests should only call VirtualTty methods directly

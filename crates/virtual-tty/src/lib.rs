@@ -6,7 +6,7 @@ mod cursor;
 mod errors;
 mod state;
 
-use ansi::{parse_escape_sequence, AnsiCommand, ClearMode};
+use ansi::{parse_escape_sequence, AnsiCommand, AnsiParser, ClearMode, ControlChar, Token};
 use state::TtyState;
 
 pub struct VirtualTty {
@@ -51,8 +51,96 @@ impl VirtualTty {
     }
 
     fn write_internal(&mut self, data: &str) {
-        let mut state = self.state.lock().unwrap();
+        // Use the new tokenized parser
+        match AnsiParser::parse(data) {
+            Ok(tokens) => {
+                let mut state = self.state.lock().unwrap();
+                for token in tokens {
+                    self.process_token(token, &mut state);
+                }
+            }
+            Err(_) => {
+                // Fallback to legacy parsing for compatibility
+                self.write_internal_legacy(data);
+            }
+        }
+    }
 
+    fn process_token(&self, token: Token, state: &mut TtyState) {
+        match token {
+            Token::Text(text) => {
+                for ch in text.chars() {
+                    let cursor_row = state.cursor.row;
+                    let cursor_col = state.cursor.col;
+                    if cursor_row < self.height && cursor_col < self.width {
+                        state.buffer.set_char(cursor_row, cursor_col, ch);
+                        if state.cursor.advance(self.width, self.height) {
+                            state.buffer.scroll_up();
+                        }
+                    }
+                }
+            }
+            Token::Command(command) => {
+                // Validate command before executing
+                if command.validate().is_ok() {
+                    self.execute_ansi_command(&command, state);
+                }
+                // If validation fails, silently ignore the command
+            }
+            Token::ControlChar(ctrl_char) => {
+                match ctrl_char {
+                    ControlChar::LineFeed => {
+                        if state.cursor.newline(self.height) {
+                            state.buffer.scroll_up();
+                        }
+                    }
+                    ControlChar::CarriageReturn => {
+                        state.cursor.carriage_return();
+                    }
+                    ControlChar::Backspace => {
+                        state.cursor.backspace();
+                    }
+                    ControlChar::Tab => {
+                        // Simple tab handling - advance to next tab stop (8 chars)
+                        let tab_width = 8;
+                        let cursor_col = state.cursor.col;
+                        let next_tab_stop = ((cursor_col / tab_width) + 1) * tab_width;
+                        let spaces_to_add = next_tab_stop - cursor_col;
+                        for _ in 0..spaces_to_add {
+                            let cursor_row = state.cursor.row;
+                            let cursor_col = state.cursor.col;
+                            if cursor_row < self.height && cursor_col < self.width {
+                                state.buffer.set_char(cursor_row, cursor_col, ' ');
+                                if state.cursor.advance(self.width, self.height) {
+                                    state.buffer.scroll_up();
+                                }
+                            }
+                        }
+                    }
+                    ControlChar::Bell => {
+                        // Bell character - typically ignored in terminal emulation
+                    }
+                    ControlChar::VerticalTab => {
+                        // Vertical tab - move to next line
+                        if state.cursor.newline(self.height) {
+                            state.buffer.scroll_up();
+                        }
+                    }
+                    ControlChar::FormFeed => {
+                        // Form feed - clear screen and move to top
+                        state.buffer.clear();
+                        state.cursor.set_position(0, 0, self.height, self.width);
+                    }
+                }
+            }
+            Token::Invalid(_) => {
+                // Ignore invalid tokens for now
+            }
+        }
+    }
+
+    fn write_internal_legacy(&mut self, data: &str) {
+        let mut state = self.state.lock().unwrap();
         let mut chars = data.chars();
         while let Some(ch) = chars.next() {
             if ch == '\x1b' {
