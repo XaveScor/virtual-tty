@@ -190,6 +190,19 @@ impl VirtualTty {
                     *buffer = vec![vec![' '; width]; height];
                     *cursor_row = 0;
                     *cursor_col = 0;
+                } else if params == "1" {
+                    // Clear from beginning of screen to cursor position
+                    // Clear all complete lines above current cursor row
+                    for row in &mut buffer[0..*cursor_row] {
+                        row.fill(' ');
+                    }
+                    // Clear current line from beginning to cursor position (exclusive)
+                    for col in 0..*cursor_col {
+                        if col < width {
+                            buffer[*cursor_row][col] = ' ';
+                        }
+                    }
+                    // Cursor position remains unchanged
                 } else if params == "0" || params.is_empty() {
                     // Clear from cursor to end of screen
                     // Clear rest of current line from cursor position

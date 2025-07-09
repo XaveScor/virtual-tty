@@ -86,3 +86,13 @@ fn test_clear_from_cursor_on_last_line() {
     let snapshot = tty.get_snapshot();
     assert_eq!(snapshot, "Line1\nLine2\nLi");
 }
+
+#[test]
+fn test_clear_from_beginning_to_cursor_basic() {
+    let mut tty = VirtualTty::new(10, 4);
+    tty.stdout_write("Line1\nLine2\nLine3\nLine4");
+    tty.stdout_write("\x1b[2;3H"); // Move to row 2, col 3
+    tty.stdout_write("\x1b[1J"); // Clear from beginning to cursor
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "\n  ne2\nLine3\nLine4");
+}
