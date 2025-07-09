@@ -72,10 +72,10 @@ fn test_mixed_clear_entire_line() {
     let mut tty = VirtualTty::new(10, 3);
     tty.stdout_write("Hello\nWorld\nTest");
     tty.stderr_write("\x1b[2A"); // Up 2 lines
-    tty.stdout_write("\x1b[2K"); // Clear entire line (not implemented, so ignored)
+    tty.stdout_write("\x1b[2K"); // Clear entire line
     tty.stderr_write("New");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HellNew\nWorld\nTest");
+    assert_eq!(snapshot, "    New\nWorld\nTest");
 }
 
 #[test]
@@ -86,10 +86,10 @@ fn test_mixed_multiple_clear_operations() {
     tty.stdout_write("\x1b[K"); // Clear to end
     tty.stderr_write("A");
     tty.stdout_write("\x1b[1B"); // Down 1
-    tty.stderr_write("\x1b[2K"); // Clear entire line (not implemented, so ignored)
+    tty.stderr_write("\x1b[2K"); // Clear entire line
     tty.stdout_write("B");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\nLine2A\nLine3 B\nLine4");
+    assert_eq!(snapshot, "Line1\nLine2A\n      B\nLine4");
 }
 
 #[test]

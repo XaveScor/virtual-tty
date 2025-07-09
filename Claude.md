@@ -51,10 +51,11 @@ For any task implementation, follow this structured approach:
 ...
 N. [Final implementation step]
 N+1. Run tests to verify functionality: `cargo test`
-N+2. Fix all linting issues: `cargo clippy`
-N+3. Format all touched files: `cargo fmt`
+N+2. Remove all debug files and debug code
+N+3. Fix all linting issues: `cargo clippy`
+N+4. Format all touched files: `cargo fmt`
 ```
 
-**Development Workflow Order**: Implement → Test → Lint → Format
+**Development Workflow Order**: Implement → Test → Cleanup Debug Files/Code → Lint → Format
 
 This ensures we validate functionality first before applying any style changes, making the development process cleaner and more focused. Tests validate the implementation works correctly before any code style enforcement.

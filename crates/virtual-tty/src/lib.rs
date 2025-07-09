@@ -200,6 +200,11 @@ impl VirtualTty {
                             buffer[*cursor_row][col] = ' ';
                         }
                     }
+                } else if params == "2" {
+                    // Clear entire line
+                    for col in 0..width {
+                        buffer[*cursor_row][col] = ' ';
+                    }
                 } else {
                     // Clear to end of line (default behavior)
                     for col in *cursor_col..width {
