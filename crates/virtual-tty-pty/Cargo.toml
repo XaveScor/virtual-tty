@@ -6,8 +6,11 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "PTY integration for virtual-tty - run real processes in virtual terminals"
+readme = "README.md"
+keywords = ["terminal", "pty", "testing", "cli", "process"]
+categories = ["development-tools::testing", "command-line-interface"]
 
 [dependencies]
-virtual-tty = { path = "../virtual-tty" }
+virtual-tty = { path = "../virtual-tty", version = "0.1.0" }
 libc.workspace = true
 

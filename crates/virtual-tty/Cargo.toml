@@ -6,6 +6,9 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Core virtual TTY implementation for testing terminal applications"
+readme = "README.md"
+keywords = ["terminal", "tty", "testing", "cli", "ansi"]
+categories = ["development-tools::testing", "command-line-interface"]
 
 [dependencies]
 # No external dependencies - pure Rust implementation
