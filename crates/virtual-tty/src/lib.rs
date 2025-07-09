@@ -4,26 +4,23 @@ mod ansi;
 mod buffer;
 mod cursor;
 mod errors;
+mod state;
 
 use ansi::{parse_escape_sequence, AnsiCommand, ClearMode};
-use buffer::Buffer;
-use cursor::Cursor;
+use state::TtyState;
 
 pub struct VirtualTty {
-    buffer: Arc<Mutex<Buffer>>,
-    cursor: Arc<Mutex<Cursor>>,
+    state: Arc<Mutex<TtyState>>,
     width: usize,
     height: usize,
 }
 
 impl VirtualTty {
     pub fn new(width: usize, height: usize) -> Self {
-        let buffer = Buffer::new(width, height);
-        let cursor = Cursor::new();
+        let state = TtyState::new(width, height);
 
         Self {
-            buffer: Arc::new(Mutex::new(buffer)),
-            cursor: Arc::new(Mutex::new(cursor)),
+            state: Arc::new(Mutex::new(state)),
             width,
             height,
         }
@@ -54,8 +51,7 @@ impl VirtualTty {
     }
 
     fn write_internal(&mut self, data: &str) {
-        let mut buffer = self.buffer.lock().unwrap();
-        let mut cursor = self.cursor.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
 
         let mut chars = data.chars();
         while let Some(ch) = chars.next() {
@@ -63,75 +59,91 @@ impl VirtualTty {
                 // Start of escape sequence
                 if chars.next() == Some('[') {
                     if let Some(command) = parse_escape_sequence(&mut chars) {
-                        self.execute_ansi_command(&command, &mut buffer, &mut cursor);
+                        self.execute_ansi_command(&command, &mut state);
                     }
                 }
             } else if ch == '\r' {
                 // Carriage return
-                cursor.carriage_return();
+                state.cursor.carriage_return();
             } else if ch == '\n' {
                 // Newline
-                if cursor.newline(self.height) {
-                    buffer.scroll_up();
+                if state.cursor.newline(self.height) {
+                    state.buffer.scroll_up();
                 }
             } else if ch == '\x08' {
                 // Backspace
-                cursor.backspace();
+                state.cursor.backspace();
             } else {
                 // Regular character
-                if cursor.row < self.height && cursor.col < self.width {
-                    buffer.set_char(cursor.row, cursor.col, ch);
-                    if cursor.advance(self.width, self.height) {
-                        buffer.scroll_up();
+                let cursor_row = state.cursor.row;
+                let cursor_col = state.cursor.col;
+                if cursor_row < self.height && cursor_col < self.width {
+                    state.buffer.set_char(cursor_row, cursor_col, ch);
+                    if state.cursor.advance(self.width, self.height) {
+                        state.buffer.scroll_up();
                     }
                 }
             }
         }
     }
 
-    fn execute_ansi_command(
-        &self,
-        command: &AnsiCommand,
-        buffer: &mut Buffer,
-        cursor: &mut Cursor,
-    ) {
+    fn execute_ansi_command(&self, command: &AnsiCommand, state: &mut TtyState) {
         match command {
             AnsiCommand::CursorUp(n) => {
-                cursor.move_up(*n);
+                state.cursor.move_up(*n);
             }
             AnsiCommand::CursorDown(n) => {
-                cursor.move_down(*n, self.height);
+                state.cursor.move_down(*n, self.height);
             }
             AnsiCommand::CursorForward(n) => {
-                cursor.move_forward(*n, self.width);
+                state.cursor.move_forward(*n, self.width);
             }
             AnsiCommand::CursorBack(n) => {
-                cursor.move_back(*n);
+                state.cursor.move_back(*n);
             }
             AnsiCommand::CursorPosition { row, col } => {
-                cursor.set_position(*row, *col, self.height, self.width);
+                state
+                    .cursor
+                    .set_position(*row, *col, self.height, self.width);
             }
             AnsiCommand::ClearScreen(clear_mode) => match clear_mode {
                 ClearMode::Entire => {
-                    buffer.clear();
-                    cursor.set_position(0, 0, self.height, self.width);
+                    state.buffer.clear();
+                    state.cursor.set_position(0, 0, self.height, self.width);
                 }
                 ClearMode::ToBeginning => {
-                    buffer.clear_from_beginning_to_cursor(cursor.row, cursor.col);
+                    let cursor_row = state.cursor.row;
+                    let cursor_col = state.cursor.col;
+                    state
+                        .buffer
+                        .clear_from_beginning_to_cursor(cursor_row, cursor_col);
                 }
                 ClearMode::ToEnd => {
-                    buffer.clear_from_cursor_to_end(cursor.row, cursor.col);
+                    let cursor_row = state.cursor.row;
+                    let cursor_col = state.cursor.col;
+                    state
+                        .buffer
+                        .clear_from_cursor_to_end(cursor_row, cursor_col);
                 }
             },
             AnsiCommand::ClearLine(clear_mode) => match clear_mode {
                 ClearMode::Entire => {
-                    buffer.clear_entire_line(cursor.row);
+                    let cursor_row = state.cursor.row;
+                    state.buffer.clear_entire_line(cursor_row);
                 }
                 ClearMode::ToBeginning => {
-                    buffer.clear_line_from_beginning_to_cursor(cursor.row, cursor.col);
+                    let cursor_row = state.cursor.row;
+                    let cursor_col = state.cursor.col;
+                    state
+                        .buffer
+                        .clear_line_from_beginning_to_cursor(cursor_row, cursor_col);
                 }
                 ClearMode::ToEnd => {
-                    buffer.clear_line_from_cursor_to_end(cursor.row, cursor.col);
+                    let cursor_row = state.cursor.row;
+                    let cursor_col = state.cursor.col;
+                    state
+                        .buffer
+                        .clear_line_from_cursor_to_end(cursor_row, cursor_col);
                 }
             },
             AnsiCommand::SetGraphicsRendition => {
@@ -141,21 +153,18 @@ impl VirtualTty {
     }
 
     pub fn get_snapshot(&self) -> String {
-        let buffer = self.buffer.lock().unwrap();
-        buffer.get_snapshot()
+        let state = self.state.lock().unwrap();
+        state.get_snapshot()
     }
 
     pub fn clear(&mut self) {
-        let mut buffer = self.buffer.lock().unwrap();
-        let mut cursor = self.cursor.lock().unwrap();
-
-        buffer.clear();
-        cursor.set_position(0, 0, self.height, self.width);
+        let mut state = self.state.lock().unwrap();
+        state.clear(self.width, self.height);
     }
 
     pub fn get_cursor_position(&self) -> (usize, usize) {
-        let cursor = self.cursor.lock().unwrap();
-        cursor.get_position()
+        let state = self.state.lock().unwrap();
+        state.get_cursor_position()
     }
 }
 
