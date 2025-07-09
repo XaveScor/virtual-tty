@@ -10,10 +10,3 @@ description = "Core virtual TTY implementation for testing terminal applications
 [dependencies]
 # No external dependencies - pure Rust implementation
 
-[[example]]
-name = "basic_tty"
-path = "../../examples/basic_tty.rs"
-
-[[example]]
-name = "testing_example"
-path = "../../examples/testing_example.rs"

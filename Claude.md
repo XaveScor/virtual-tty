@@ -39,3 +39,11 @@ VirtualTTY is a Rust library that provides virtual terminal (TTY) emulation for 
 **Key API**: `PtyAdapter::new(width, height)` → `spawn_command(&mut Command)` → `get_snapshot()`
 
 **If you need to modify this crate**: [Read more here](crates/virtual-tty-pty/Claude.md)
+
+## Development Guidelines
+
+### Code Formatting
+For any task that involves modifying code files, you must format all touched files using `cargo fmt` after finishing the task:
+```bash
+cargo fmt
+```

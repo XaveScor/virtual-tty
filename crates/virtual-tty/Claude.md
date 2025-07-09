@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 **Key API**: `VirtualTty::new(width, height)` → `stdout_write()` → `get_snapshot()`
 
-**See**: `../../examples/basic_tty.rs` and `../../examples/testing_example.rs` for usage patterns.
+**See**: The comprehensive test suite in `tests/cursor_tests.rs` for usage patterns.
 
 ## Usage Pattern
 

@@ -268,26 +268,6 @@ mod tests {
         assert_eq!(snapshot, "");
     }
 
-    #[test]
-    fn test_cursor_movement() {
-        let mut tty = VirtualTty::new(10, 3);
-        tty.stdout_write("Hello");
-        tty.stdout_write("\x1b[1;1H"); // Move to top-left
-        tty.stdout_write("X");
-        let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Xello");
-    }
-
-    #[test]
-    fn test_clear_to_end_of_line() {
-        let mut tty = VirtualTty::new(10, 3);
-        tty.stdout_write("Hello");
-        tty.stdout_write("\x1b[3D"); // Move back 3
-        tty.stdout_write("123");
-        tty.stdout_write("\x1b[K"); // Clear to end
-        let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "He123");
-    }
 
     #[test]
     fn test_stderr() {
@@ -314,12 +294,4 @@ mod tests {
         assert_eq!(snapshot, "");
     }
 
-    #[test]
-    fn test_cursor_position() {
-        let mut tty = VirtualTty::new(10, 3);
-        tty.stdout_write("Hello");
-        let (row, col) = tty.get_cursor_position();
-        assert_eq!(row, 0);
-        assert_eq!(col, 5);
-    }
 }

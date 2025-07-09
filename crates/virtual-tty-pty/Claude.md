@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 **Dependencies**: Requires `libc` for Unix PTY operations. Wraps the core `virtual-tty` crate.
 
-**See**: `../../examples/pty_interactive.rs`, `../../examples/pty_ls.rs`, `../../examples/vim_hjkl.rs` for usage patterns.
+**See**: The comprehensive test suite in `tests/` directory for usage patterns.
 
 ## Usage Patterns
 

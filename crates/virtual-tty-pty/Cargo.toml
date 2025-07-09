@@ -11,22 +11,3 @@ description = "PTY integration for virtual-tty - run real processes in virtual t
 virtual-tty = { path = "../virtual-tty" }
 libc.workspace = true
 
-[[example]]
-name = "pty_ls"
-path = "../../examples/pty_ls.rs"
-
-[[example]]
-name = "pty_interactive"
-path = "../../examples/pty_interactive.rs"
-
-[[example]]
-name = "generate_test_content"
-path = "../../examples/generate_test_content.rs"
-
-[[example]]
-name = "less_scrolling"
-path = "../../examples/less_scrolling.rs"
-
-[[example]]
-name = "vim_hjkl"
-path = "../../examples/vim_hjkl.rs"
