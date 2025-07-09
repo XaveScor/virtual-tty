@@ -1,0 +1,237 @@
+use virtual_tty::VirtualTty;
+
+// =============================================================================
+// RELATIVE CURSOR MOVEMENTS
+// =============================================================================
+
+// Cursor Up (A command) tests
+#[test]
+fn test_stderr_cursor_up_basic() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Line1\nLine2\nLine3");
+    tty.stderr_write("\x1b[1A"); // Move up 1 line
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1\nLine2X\nLine3");
+}
+
+#[test]
+fn test_stderr_cursor_up_multiple() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Line1\nLine2\nLine3");
+    tty.stderr_write("\x1b[2A"); // Move up 2 lines
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1X\nLine2\nLine3");
+}
+
+#[test]
+fn test_stderr_cursor_up_no_parameter() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Line1\nLine2");
+    tty.stderr_write("\x1b[A"); // Move up 1 line (default)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1X\nLine2");
+}
+
+#[test]
+fn test_stderr_cursor_up_bounds_check() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[10A"); // Try to move up 10 lines (should stop at 0)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "HelloX");
+}
+
+// Cursor Down (B command) tests
+#[test]
+fn test_stderr_cursor_down_basic() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Line1");
+    tty.stderr_write("\x1b[1B"); // Move down 1 line
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1\n     X");
+}
+
+#[test]
+fn test_stderr_cursor_down_multiple() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Line1");
+    tty.stderr_write("\x1b[2B"); // Move down 2 lines
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1\n\n     X");
+}
+
+#[test]
+fn test_stderr_cursor_down_no_parameter() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Line1");
+    tty.stderr_write("\x1b[B"); // Move down 1 line (default)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Line1\n     X");
+}
+
+#[test]
+fn test_stderr_cursor_down_bounds_check() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[10B"); // Try to move down 10 lines (should stop at height-1)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Hello\n\n     X");
+}
+
+// Cursor Forward (C command) tests
+#[test]
+fn test_stderr_cursor_forward_basic() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[3D"); // Move back 3
+    tty.stderr_write("\x1b[1C"); // Move forward 1
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "HelXo");
+}
+
+#[test]
+fn test_stderr_cursor_forward_multiple() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[5D"); // Move back 5
+    tty.stderr_write("\x1b[2C"); // Move forward 2
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "HeXlo");
+}
+
+#[test]
+fn test_stderr_cursor_forward_no_parameter() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[3D"); // Move back 3
+    tty.stderr_write("\x1b[C"); // Move forward 1 (default)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "HelXo");
+}
+
+#[test]
+fn test_stderr_cursor_forward_bounds_check() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[20C"); // Try to move forward 20 positions (should stop at width-1)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Hello    X");
+}
+
+// Cursor Back (D command) tests
+#[test]
+fn test_stderr_cursor_back_basic() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[1D"); // Move back 1
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "HellX");
+}
+
+#[test]
+fn test_stderr_cursor_back_multiple() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[3D"); // Move back 3
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "HeXlo");
+}
+
+#[test]
+fn test_stderr_cursor_back_no_parameter() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[D"); // Move back 1 (default)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "HellX");
+}
+
+#[test]
+fn test_stderr_cursor_back_bounds_check() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[20D"); // Try to move back 20 positions (should stop at 0)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Xello");
+}
+
+// =============================================================================
+// ABSOLUTE CURSOR POSITIONING
+// =============================================================================
+
+// Cursor Position (H command) tests
+#[test]
+fn test_stderr_absolute_cursor_positioning() {
+    let mut tty = VirtualTty::new(10, 3);
+    tty.stderr_write("Hello");
+    tty.stderr_write("\x1b[1;1H"); // Move to top-left
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Xello");
+}
+
+#[test]
+fn test_stderr_set_cursor_to_row_col() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Hello\nWorld");
+    tty.stderr_write("\x1b[2;3H"); // Move to row 2, col 3
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Hello\nWoXld");
+}
+
+#[test]
+fn test_stderr_set_cursor_to_row_col_alt_syntax() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Hello\nWorld");
+    tty.stderr_write("\x1b[2;3f"); // Move to row 2, col 3 (f command)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Hello\nWoXld");
+}
+
+#[test]
+fn test_stderr_set_cursor_to_home_position() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Hello\nWorld");
+    tty.stderr_write("\x1b[H"); // Move to row 1, col 1 (default)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Xello\nWorld");
+}
+
+#[test]
+fn test_stderr_set_cursor_partial_coordinates() {
+    let mut tty = VirtualTty::new(10, 5);
+    tty.stderr_write("Hello\nWorld");
+    tty.stderr_write("\x1b[2;H"); // Move to row 2, col 1 (default)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "Hello\nXorld");
+}
+
+#[test]
+fn test_stderr_set_cursor_bounds_clamping() {
+    let mut tty = VirtualTty::new(15, 10);
+    tty.stderr_write("Hello\nWorld");
+    tty.stderr_write("\x1b[20;30H"); // Try to move to row 20, col 30 (should be clamped)
+    tty.stderr_write("X");
+    let snapshot = tty.get_snapshot();
+    assert_eq!(snapshot, "World\n\n\n\n\n\n\n\n              X");
+}

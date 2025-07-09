@@ -50,7 +50,14 @@ impl VirtualTty {
         let buffer = self.buffer.clone();
         let cursor_row = self.cursor_row.clone();
         let cursor_col = self.cursor_col.clone();
-        Self::process_output(data, &buffer, &cursor_row, &cursor_col, self.width, self.height);
+        Self::process_output(
+            data,
+            &buffer,
+            &cursor_row,
+            &cursor_col,
+            self.width,
+            self.height,
+        );
     }
 
     fn process_output(
@@ -70,7 +77,14 @@ impl VirtualTty {
             if ch == '\x1b' {
                 // Start of escape sequence
                 if chars.next() == Some('[') {
-                    Self::handle_escape_sequence_static(&mut chars, &mut buffer, &mut row, &mut col, width, height);
+                    Self::handle_escape_sequence_static(
+                        &mut chars,
+                        &mut buffer,
+                        &mut row,
+                        &mut col,
+                        width,
+                        height,
+                    );
                 }
             } else if ch == '\r' {
                 // Carriage return
@@ -95,7 +109,7 @@ impl VirtualTty {
                 if *col < width && *row < height {
                     buffer[*row][*col] = ch;
                     *col += 1;
-                    
+
                     // Wrap to next line if needed
                     if *col >= width {
                         *col = 0;
@@ -122,7 +136,7 @@ impl VirtualTty {
     ) {
         let mut params = String::new();
         let mut cmd = ' ';
-        
+
         // Read until we find the command character
         for ch in chars {
             if ch.is_ascii_alphabetic() || ch == '~' {
@@ -156,11 +170,13 @@ impl VirtualTty {
             'H' | 'f' => {
                 // Cursor position
                 let parts: Vec<&str> = params.split(';').collect();
-                let row = parts.get(0)
+                let row = parts
+                    .get(0)
                     .and_then(|s| s.parse::<usize>().ok())
                     .unwrap_or(1)
                     .saturating_sub(1);
-                let col = parts.get(1)
+                let col = parts
+                    .get(1)
                     .and_then(|s| s.parse::<usize>().ok())
                     .unwrap_or(1)
                     .saturating_sub(1);
@@ -209,7 +225,7 @@ impl VirtualTty {
         let mut buffer = self.buffer.lock().unwrap();
         let mut row = self.cursor_row.lock().unwrap();
         let mut col = self.cursor_col.lock().unwrap();
-        
+
         *buffer = vec![vec![' '; self.width]; self.height];
         *row = 0;
         *col = 0;
@@ -268,7 +284,6 @@ mod tests {
         assert_eq!(snapshot, "");
     }
 
-
     #[test]
     fn test_stderr() {
         let mut tty = VirtualTty::new(10, 3);
@@ -294,4 +309,67 @@ mod tests {
         assert_eq!(snapshot, "");
     }
 
+    // =============================================================================
+    // STDERR TESTS - Mirror of stdout tests but using stderr_write()
+    // =============================================================================
+
+    #[test]
+    fn test_stderr_basic_write() {
+        let mut tty = VirtualTty::new(10, 3);
+        tty.stderr_write("Hello");
+        let snapshot = tty.get_snapshot();
+        assert_eq!(snapshot, "Hello");
+    }
+
+    #[test]
+    fn test_stderr_newline() {
+        let mut tty = VirtualTty::new(10, 3);
+        tty.stderr_write("Line1\nLine2");
+        let snapshot = tty.get_snapshot();
+        assert_eq!(snapshot, "Line1\nLine2");
+    }
+
+    #[test]
+    fn test_stderr_line_wrap() {
+        let mut tty = VirtualTty::new(5, 3);
+        tty.stderr_write("HelloWorld");
+        let snapshot = tty.get_snapshot();
+        assert_eq!(snapshot, "Hello\nWorld");
+    }
+
+    #[test]
+    fn test_stderr_clear_screen() {
+        let mut tty = VirtualTty::new(10, 3);
+        tty.stderr_write("Hello\nWorld");
+        tty.stderr_write("\x1b[2J");
+        let snapshot = tty.get_snapshot();
+        assert_eq!(snapshot, "");
+    }
+
+    #[test]
+    fn test_stderr_scroll() {
+        let mut tty = VirtualTty::new(10, 2);
+        tty.stderr_write("Line1\nLine2\nLine3");
+        let snapshot = tty.get_snapshot();
+        assert_eq!(snapshot, "Line2\nLine3");
+    }
+
+    #[test]
+    fn test_mixed_stdout_stderr() {
+        let mut tty = VirtualTty::new(15, 3);
+        tty.stdout_write("Hello");
+        tty.stderr_write(" World");
+        let snapshot = tty.get_snapshot();
+        assert_eq!(snapshot, "Hello World");
+    }
+
+    #[test]
+    fn test_stderr_with_ansi_escape() {
+        let mut tty = VirtualTty::new(10, 3);
+        tty.stderr_write("Hello");
+        tty.stderr_write("\x1b[1A"); // Move up 1 line
+        tty.stderr_write("X");
+        let snapshot = tty.get_snapshot();
+        assert_eq!(snapshot, "HelloX");
+    }
 }

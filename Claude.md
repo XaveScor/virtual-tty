@@ -42,8 +42,16 @@ VirtualTTY is a Rust library that provides virtual terminal (TTY) emulation for 
 
 ## Development Guidelines
 
-### Code Formatting
-For any task that involves modifying code files, you must format all touched files using `cargo fmt` after finishing the task:
-```bash
-cargo fmt
+### Task Implementation Plan Template
+For any task implementation, follow this structured approach:
+
 ```
+1. [First implementation step]
+2. [Second implementation step]
+...
+N. [Final implementation step]
+N+1. Fix all errors after lint: `cargo clippy`
+N+2. Reformat touched files: `cargo fmt`
+```
+
+This ensures consistent quality and formatting across all code changes.
