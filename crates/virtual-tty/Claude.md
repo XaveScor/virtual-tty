@@ -37,6 +37,11 @@ fn test_my_app() {
 - **Thread Safety**: Arc<Mutex<>> for concurrent access to terminal buffer
 - **Efficient Buffer**: 2D Vec<Vec<char>> for O(1) character access
 - **ANSI Support**: Handles common terminal escape sequences (cursor movement, clearing)
+- **Modular Structure**: Organized into focused modules for maintainability:
+  - `buffer.rs` - Terminal buffer management
+  - `cursor.rs` - Cursor state and operations
+  - `ansi/` - ANSI escape sequence parsing and commands
+  - `errors.rs` - Error types foundation
 
 ### Testing Strategy
 - **Unit Tests**: Platform-independent tests using direct VirtualTty API calls
