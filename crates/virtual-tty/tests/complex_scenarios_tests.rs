@@ -15,5 +15,11 @@ fn test_complex_cursor_sequence() {
     tty.stdout_write("\x1b[1D"); // Left 1 column
     tty.stdout_write("Y");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello X\nWorld Y\nTest");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello X   \n
+    World Y   \n
+    Test      \n
+              \n
+              \n
+    ");
 }

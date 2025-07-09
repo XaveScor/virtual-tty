@@ -97,7 +97,10 @@ fn test_mixed_relative_movement_after_scroll() {
     tty.stderr_write("\x1b[1A"); // Move up 1 line
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line2X\nLine3");
+    insta::assert_snapshot!(snapshot, @r"
+    Line2X    \n
+    Line3     \n
+    ");
 }
 
 #[test]
@@ -110,7 +113,10 @@ fn test_mixed_scroll_with_cursor_movements() {
     tty.stdout_write("\x1b[3D"); // Back 3
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "SeXond\nThird");
+    insta::assert_snapshot!(snapshot, @r"
+    SeXond  \n
+    Third   \n
+    ");
 }
 
 // =============================================================================
@@ -129,7 +135,11 @@ fn test_mixed_cursor_at_line_boundaries() {
     tty.stderr_write("\x1b[1A"); // Up 1
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "123X5\n678");
+    insta::assert_snapshot!(snapshot, @r"
+    123X5\n
+    678  \n
+         \n
+    ");
 }
 
 #[test]
@@ -142,7 +152,11 @@ fn test_mixed_line_wrapping_behavior() {
     assert_eq!((row, col), (1, 3));
 
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "ABCDEF\nGHI");
+    insta::assert_snapshot!(snapshot, @r"
+    ABCDEF\n
+    GHI   \n
+          \n
+    ");
 }
 
 #[test]
@@ -159,7 +173,12 @@ fn test_mixed_newline_handling() {
     assert_eq!((row, col), (2, 0));
 
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\nLine2");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+    Line2     \n
+              \n
+              \n
+    ");
 }
 
 #[test]

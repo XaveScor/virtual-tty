@@ -34,28 +34,21 @@ fn test_my_app() {
 
 ### Architecture
 - **No Dependencies**: Pure Rust implementation for maximum portability
-- **Thread Safety**: Arc<Mutex<>> for concurrent access to terminal buffer
-- **Efficient Buffer**: 2D Vec<Vec<char>> for O(1) character access
+- **Thread Safety**: Concurrent access to terminal buffer
 - **ANSI Support**: Handles common terminal escape sequences (cursor movement, clearing)
-- **Modular Structure**: Organized into focused modules for maintainability:
-  - `buffer.rs` - Terminal buffer management
-  - `cursor.rs` - Cursor state and operations
-  - `ansi/` - ANSI escape sequence parsing and commands
-  - `errors.rs` - Error types foundation
+- **Modular Structure**: Organized into focused modules for maintainability
 
 ### Type-Safe ANSI Parsing
-- **Tokenized Parsing**: Uses `AnsiParser` to convert input into structured tokens
-- **Error Handling**: Proper error types with `ParseError` enum for validation failures
-- **Token Types**: `Token` enum with `Text`, `Command`, `ControlChar`, and `Invalid` variants
+- **Tokenized Parsing**: Converts input into structured tokens
+- **Error Handling**: Proper error types for validation failures
 - **Command Validation**: All ANSI commands are validated before execution
 - **Fallback Support**: Legacy parser maintained for backward compatibility
 
 ### Testing Strategy
 - **Unit Tests**: Platform-independent tests using direct VirtualTty API calls
-- **No External Dependencies**: Tests should only call VirtualTty methods directly
-- **Isolated Testing**: Focus on VirtualTty behavior in isolation, not integration with external processes
-- **CI-Friendly**: Works in any environment without external dependencies
+- **Isolated Testing**: Focus on VirtualTty behavior in isolation
 - **Deterministic**: Consistent behavior across different platforms
+- **Snapshot Testing**: Uses inline snapshots for automatic test management
 
 ### Unit Testing Guidelines
 - Use direct commands: `tty.stdout_write()`, `tty.stderr_write()`, `tty.get_snapshot()`
@@ -63,6 +56,11 @@ fn test_my_app() {
 - Test terminal behavior: line wrapping, scrolling, buffer management
 - Avoid process spawning or external commands
 - Focus on pure VirtualTty functionality
+
+### Snapshot Testing with Insta
+- **Inline Snapshots**: Use `insta::assert_snapshot!(snapshot, @"")` for all snapshot assertions
+- **Format**: Output includes visual `\n` markers for line endings
+- **Benefits**: Automatic snapshot management, visual diffs, easy updates
 
 ## Test File Organization
 
@@ -120,7 +118,8 @@ When adding new tests, choose the appropriate file based on:
 fn test_feature_name() {
     let mut tty = VirtualTty::new(width, height);
     tty.stdout_write("content");
-    assert_eq!(tty.get_snapshot(), "expected");
+    let snapshot = tty.get_snapshot();
+    insta::assert_snapshot!(snapshot, @"");
 }
 
 // Mixed test
@@ -129,54 +128,10 @@ fn test_mixed_feature_name() {
     let mut tty = VirtualTty::new(width, height);
     tty.stdout_write("stdout content");
     tty.stderr_write("stderr content");
-    assert_eq!(tty.get_snapshot(), "expected combined");
+    let snapshot = tty.get_snapshot();
+    insta::assert_snapshot!(snapshot, @"");
 }
 ```
 
-## Test Memory Maintenance
-
-**IMPORTANT**: When creating new tests, LLMs must update this memory documentation to keep it current and useful.
-
-### When to Update Memory
-
-Update this `Claude.md` file when:
-- **Creating new test files** - Add to the appropriate category listing
-- **Adding new test categories** - Update behavior categories and guidelines
-- **Changing test organization** - Modify file structure documentation
-- **Adding significant new test patterns** - Include in example patterns section
-
-### What Information to Track
-
-When updating memory for new tests, include:
-
-1. **Test File Information**:
-   - File name and location
-   - Brief description of purpose
-   - Which behavior category it belongs to
-
-2. **New Patterns or Techniques**:
-   - Document any new testing approaches used
-   - Add to example patterns if widely applicable
-   - Note any edge cases or special considerations discovered
-
-### Memory Update Template
-
-When adding new tests, use this format:
-
-```
-Test Memory Update:
-- Added: [filename] for [behavior category]
-- Coverage: [brief description of what's tested]
-- Patterns: [any new testing patterns used]
-```
-
-### Example Memory Update
-
-```
-Test Memory Update:
-- Added: mixed_input_handling_tests.rs for input handling
-- Coverage: Mixed stdout/stderr input processing and response
-- Patterns: Introduced async input simulation pattern
-```
 
 For full project context, see `../../Claude.md`.

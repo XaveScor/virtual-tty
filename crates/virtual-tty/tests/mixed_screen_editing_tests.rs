@@ -12,7 +12,11 @@ fn test_mixed_clear_line_from_cursor() {
     tty.stdout_write("123");
     tty.stderr_write("\x1b[K"); // Clear to end of line
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "He123");
+    insta::assert_snapshot!(snapshot, @r"
+    He123     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -21,7 +25,11 @@ fn test_mixed_clear_screen() {
     tty.stdout_write("Line1\nLine2\nLine3");
     tty.stderr_write("\x1b[2J"); // Clear screen
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "");
+    insta::assert_snapshot!(snapshot, @r"
+    \n
+    \n
+    \n
+    ");
 }
 
 #[test]
@@ -31,7 +39,11 @@ fn test_mixed_clear_and_write() {
     tty.stderr_write("\x1b[2J"); // Clear screen
     tty.stdout_write("New content");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "New content");
+    insta::assert_snapshot!(snapshot, @r"
+    New content \n
+                \n
+                \n
+    ");
 }
 
 #[test]
@@ -42,7 +54,11 @@ fn test_mixed_clear_home_and_write() {
     tty.stdout_write("\x1b[2J"); // Clear screen
     tty.stderr_write("Fresh start");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Fresh start");
+    insta::assert_snapshot!(snapshot, @r"
+    Fresh start    \n
+                   \n
+                   \n
+    ");
 }
 
 #[test]
@@ -53,7 +69,11 @@ fn test_mixed_line_clearing_operations() {
     tty.stdout_write("\x1b[K"); // Clear to end of line
     tty.stderr_write("XYZ");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "ABCXYZ");
+    insta::assert_snapshot!(snapshot, @r"
+    ABCXYZ    \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -64,7 +84,11 @@ fn test_mixed_clear_line_beginning() {
     tty.stdout_write("\x1b[1K"); // Clear from beginning of line to cursor (now implemented)
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "   Xo");
+    insta::assert_snapshot!(snapshot, @r"
+    Xo     \n
+           \n
+           \n
+    ");
 }
 
 #[test]
@@ -75,7 +99,11 @@ fn test_mixed_clear_entire_line() {
     tty.stdout_write("\x1b[2K"); // Clear entire line
     tty.stderr_write("New");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "    New\nWorld\nTest");
+    insta::assert_snapshot!(snapshot, @r"
+        New   \n
+    World     \n
+    Test      \n
+    ");
 }
 
 #[test]
@@ -89,7 +117,12 @@ fn test_mixed_multiple_clear_operations() {
     tty.stderr_write("\x1b[2K"); // Clear entire line
     tty.stdout_write("B");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\nLine2A\n      B\nLine4");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1       \n
+    Line2A      \n
+          B     \n
+    Line4       \n
+    ");
 }
 
 #[test]
@@ -100,7 +133,11 @@ fn test_mixed_clear_with_cursor_positioning() {
     tty.stdout_write("\x1b[K"); // Clear to end
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "ABCD\nEFX\nIJKL");
+    insta::assert_snapshot!(snapshot, @r"
+    ABCD    \n
+    EFX     \n
+    IJKL    \n
+    ");
 }
 
 #[test]
@@ -111,7 +148,11 @@ fn test_mixed_screen_clear_with_home() {
     tty.stdout_write("\x1b[2J"); // Clear screen
     tty.stderr_write("Clean");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Clean");
+    insta::assert_snapshot!(snapshot, @r"
+    Clean     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -122,7 +163,11 @@ fn test_mixed_partial_clear_operations() {
     tty.stdout_write("\x1b[K"); // Clear to end
     tty.stderr_write("ABC");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "1234ABC");
+    insta::assert_snapshot!(snapshot, @r"
+    1234ABC   \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -135,7 +180,11 @@ fn test_mixed_alternating_clear_write() {
     tty.stdout_write("\x1b[K"); // Clear to end of line again
     tty.stderr_write("Second");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "First Second");
+    insta::assert_snapshot!(snapshot, @r"
+    First Second   \n
+                   \n
+                   \n
+    ");
 }
 
 #[test]
@@ -146,7 +195,11 @@ fn test_mixed_clear_line_beginning_at_start() {
     tty.stdout_write("\x1b[1K"); // Clear from beginning to cursor (at position 0)
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Xello");
+    insta::assert_snapshot!(snapshot, @r"
+    Xello     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -156,7 +209,11 @@ fn test_mixed_clear_line_beginning_at_end() {
     tty.stderr_write("\x1b[1K"); // Clear from beginning to cursor (at end)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "     X");
+    insta::assert_snapshot!(snapshot, @r"
+    X    \n
+         \n
+         \n
+    ");
 }
 
 #[test]
@@ -165,7 +222,11 @@ fn test_mixed_clear_line_beginning_empty_line() {
     tty.stdout_write("\x1b[1K"); // Clear from beginning to cursor on empty line
     tty.stderr_write("Test");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Test");
+    insta::assert_snapshot!(snapshot, @r"
+    Test      \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -176,7 +237,12 @@ fn test_mixed_clear_from_cursor_to_end_of_screen() {
     tty.stdout_write("\x1b[2;3H"); // Move to row 2, col 3
     tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\nLi");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+    Li        \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -187,7 +253,12 @@ fn test_mixed_clear_from_cursor_to_end_of_screen_default() {
     tty.stderr_write("\x1b[2;3H"); // Move to row 2, col 3
     tty.stdout_write("\x1b[J"); // Clear from cursor to end of screen (default)
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\nLi");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+    Li        \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -199,7 +270,11 @@ fn test_mixed_clear_from_cursor_at_start_of_line() {
     tty.stderr_write("\x1b[2;1H"); // Move to row 2, col 1
     tty.stdout_write("\x1b[0J"); // Clear from cursor to end of screen
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "ABCD");
+    insta::assert_snapshot!(snapshot, @r"
+    ABCD    \n
+            \n
+            \n
+    ");
 }
 
 #[test]
@@ -212,7 +287,11 @@ fn test_mixed_clear_from_cursor_preserves_position() {
     tty.stdout_write("\x1b[0J"); // Clear from cursor to end of screen
     tty.stderr_write("X"); // Should write at cursor position
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello\nWX");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello     \n
+    WX        \n
+              \n
+    ");
 }
 
 #[test]
@@ -224,7 +303,11 @@ fn test_mixed_clear_from_cursor_on_last_line() {
     tty.stdout_write("\x1b[3D"); // Move back 3 on last line
     tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\nLine2\nLi");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+    Line2     \n
+    Li        \n
+    ");
 }
 
 #[test]
@@ -237,5 +320,10 @@ fn test_mixed_clear_from_cursor_with_subsequent_writes() {
     tty.stdout_write("\x1b[1B"); // Move down 1 line
     tty.stderr_write("MORE");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "First\nSecNEW\n      MORE");
+    insta::assert_snapshot!(snapshot, @r"
+    First       \n
+    SecNEW      \n
+          MORE  \n
+                \n
+    ");
 }

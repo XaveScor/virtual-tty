@@ -273,7 +273,11 @@ mod tests {
         let mut tty = VirtualTty::new(10, 3);
         tty.stdout_write("Hello");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Hello");
+        insta::assert_snapshot!(snapshot, @r"
+        Hello     \n
+                  \n
+                  \n
+        ");
     }
 
     #[test]
@@ -281,7 +285,11 @@ mod tests {
         let mut tty = VirtualTty::new(10, 3);
         tty.stdout_write("Line1\nLine2");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Line1\nLine2");
+        insta::assert_snapshot!(snapshot, @r"
+        Line1     \n
+        Line2     \n
+                  \n
+        ");
     }
 
     #[test]
@@ -289,7 +297,11 @@ mod tests {
         let mut tty = VirtualTty::new(5, 3);
         tty.stdout_write("HelloWorld");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Hello\nWorld");
+        insta::assert_snapshot!(snapshot, @r"
+        Hello\n
+        World\n
+             \n
+        ");
     }
 
     #[test]
@@ -298,7 +310,11 @@ mod tests {
         tty.stdout_write("Hello\nWorld");
         tty.stdout_write("\x1b[2J");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "");
+        insta::assert_snapshot!(snapshot, @r"
+        \n
+        \n
+        \n
+        ");
     }
 
     #[test]
@@ -306,7 +322,11 @@ mod tests {
         let mut tty = VirtualTty::new(10, 3);
         tty.stderr_write("Error!");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Error!");
+        insta::assert_snapshot!(snapshot, @r"
+        Error!    \n
+                  \n
+                  \n
+        ");
     }
 
     #[test]
@@ -314,7 +334,10 @@ mod tests {
         let mut tty = VirtualTty::new(10, 2);
         tty.stdout_write("Line1\nLine2\nLine3");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Line2\nLine3");
+        insta::assert_snapshot!(snapshot, @r"
+        Line2     \n
+        Line3     \n
+        ");
     }
 
     #[test]
@@ -323,7 +346,11 @@ mod tests {
         tty.stdout_write("Hello\nWorld");
         tty.clear();
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "");
+        insta::assert_snapshot!(snapshot, @r"
+        \n
+        \n
+        \n
+        ");
     }
 
     // =============================================================================
@@ -335,7 +362,11 @@ mod tests {
         let mut tty = VirtualTty::new(10, 3);
         tty.stderr_write("Hello");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Hello");
+        insta::assert_snapshot!(snapshot, @r"
+        Hello     \n
+                  \n
+                  \n
+        ");
     }
 
     #[test]
@@ -343,7 +374,11 @@ mod tests {
         let mut tty = VirtualTty::new(10, 3);
         tty.stderr_write("Line1\nLine2");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Line1\nLine2");
+        insta::assert_snapshot!(snapshot, @r"
+        Line1     \n
+        Line2     \n
+                  \n
+        ");
     }
 
     #[test]
@@ -351,7 +386,11 @@ mod tests {
         let mut tty = VirtualTty::new(5, 3);
         tty.stderr_write("HelloWorld");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Hello\nWorld");
+        insta::assert_snapshot!(snapshot, @r"
+        Hello\n
+        World\n
+             \n
+        ");
     }
 
     #[test]
@@ -360,7 +399,11 @@ mod tests {
         tty.stderr_write("Hello\nWorld");
         tty.stderr_write("\x1b[2J");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "");
+        insta::assert_snapshot!(snapshot, @r"
+        \n
+        \n
+        \n
+        ");
     }
 
     #[test]
@@ -368,7 +411,10 @@ mod tests {
         let mut tty = VirtualTty::new(10, 2);
         tty.stderr_write("Line1\nLine2\nLine3");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Line2\nLine3");
+        insta::assert_snapshot!(snapshot, @r"
+        Line2     \n
+        Line3     \n
+        ");
     }
 
     #[test]
@@ -377,7 +423,11 @@ mod tests {
         tty.stdout_write("Hello");
         tty.stderr_write(" World");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "Hello World");
+        insta::assert_snapshot!(snapshot, @r"
+        Hello World    \n
+                       \n
+                       \n
+        ");
     }
 
     #[test]
@@ -387,6 +437,10 @@ mod tests {
         tty.stderr_write("\x1b[1A"); // Move up 1 line
         tty.stderr_write("X");
         let snapshot = tty.get_snapshot();
-        assert_eq!(snapshot, "HelloX");
+        insta::assert_snapshot!(snapshot, @r"
+        HelloX    \n
+                  \n
+                  \n
+        ");
     }
 }

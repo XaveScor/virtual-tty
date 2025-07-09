@@ -10,3 +10,6 @@ description = "Core virtual TTY implementation for testing terminal applications
 [dependencies]
 # No external dependencies - pure Rust implementation
 
+[dev-dependencies]
+insta = "1.43.1"
+

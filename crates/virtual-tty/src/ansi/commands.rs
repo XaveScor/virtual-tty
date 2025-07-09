@@ -56,24 +56,22 @@ pub enum ParseError {
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ParseError::InvalidEscapeSequence(seq) => write!(f, "Invalid escape sequence: {}", seq),
-            ParseError::InvalidParameter(param) => write!(f, "Invalid parameter: {}", param),
+            ParseError::InvalidEscapeSequence(seq) => write!(f, "Invalid escape sequence: {seq}"),
+            ParseError::InvalidParameter(param) => write!(f, "Invalid parameter: {param}"),
             ParseError::InvalidParameterCount { expected, actual } => {
                 write!(
                     f,
-                    "Invalid parameter count: expected {}, got {}",
-                    expected, actual
+                    "Invalid parameter count: expected {expected}, got {actual}"
                 )
             }
             ParseError::InvalidParameterRange { param, min, max } => {
                 write!(
                     f,
-                    "Parameter '{}' out of range: must be between {} and {}",
-                    param, min, max
+                    "Parameter '{param}' out of range: must be between {min} and {max}"
                 )
             }
             ParseError::UnexpectedEndOfInput => write!(f, "Unexpected end of input"),
-            ParseError::InvalidCharacter(ch) => write!(f, "Invalid character: '{}'", ch),
+            ParseError::InvalidCharacter(ch) => write!(f, "Invalid character: '{ch}'"),
         }
     }
 }
@@ -142,8 +140,7 @@ impl AnsiCommand {
             }
             'm' => Ok(AnsiCommand::SetGraphicsRendition),
             _ => Err(ParseError::InvalidEscapeSequence(format!(
-                "Unknown CSI command: {}",
-                cmd
+                "Unknown CSI command: {cmd}"
             ))),
         }
     }

@@ -12,7 +12,13 @@ fn test_mixed_cursor_up_basic() {
     tty.stderr_write("\x1b[1A"); // Move up 1 line
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\nLine2X\nLine3");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+    Line2X    \n
+    Line3     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -22,7 +28,13 @@ fn test_mixed_cursor_up_multiple() {
     tty.stderr_write("\x1b[2A"); // Move up 2 lines
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1X\nLine2\nLine3");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1X    \n
+    Line2     \n
+    Line3     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -32,7 +44,13 @@ fn test_mixed_cursor_up_no_parameter() {
     tty.stderr_write("\x1b[A"); // Move up 1 line (default)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1X\nLine2");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1X    \n
+    Line2     \n
+              \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -42,7 +60,11 @@ fn test_mixed_cursor_up_bounds_check() {
     tty.stderr_write("\x1b[10A"); // Try to move up 10 lines (should stop at 0)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HelloX");
+    insta::assert_snapshot!(snapshot, @r"
+    HelloX    \n
+              \n
+              \n
+    ");
 }
 
 // Cursor Down (B command) tests
@@ -53,7 +75,13 @@ fn test_mixed_cursor_down_basic() {
     tty.stderr_write("\x1b[1B"); // Move down 1 line
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\n     X");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+         X    \n
+              \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -63,7 +91,13 @@ fn test_mixed_cursor_down_multiple() {
     tty.stderr_write("\x1b[2B"); // Move down 2 lines
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\n\n     X");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+              \n
+         X    \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -73,7 +107,13 @@ fn test_mixed_cursor_down_no_parameter() {
     tty.stderr_write("\x1b[B"); // Move down 1 line (default)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line1\n     X");
+    insta::assert_snapshot!(snapshot, @r"
+    Line1     \n
+         X    \n
+              \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -83,7 +123,11 @@ fn test_mixed_cursor_down_bounds_check() {
     tty.stderr_write("\x1b[10B"); // Try to move down 10 lines (should stop at height-1)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello\n\n     X");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello     \n
+              \n
+         X    \n
+    ");
 }
 
 // Cursor Forward (C command) tests
@@ -95,7 +139,11 @@ fn test_mixed_cursor_forward_basic() {
     tty.stdout_write("\x1b[1C"); // Move forward 1
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HelXo");
+    insta::assert_snapshot!(snapshot, @r"
+    HelXo     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -106,7 +154,11 @@ fn test_mixed_cursor_forward_multiple() {
     tty.stdout_write("\x1b[2C"); // Move forward 2
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HeXlo");
+    insta::assert_snapshot!(snapshot, @r"
+    HeXlo     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -117,7 +169,11 @@ fn test_mixed_cursor_forward_no_parameter() {
     tty.stdout_write("\x1b[C"); // Move forward 1 (default)
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HelXo");
+    insta::assert_snapshot!(snapshot, @r"
+    HelXo     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -127,7 +183,11 @@ fn test_mixed_cursor_forward_bounds_check() {
     tty.stderr_write("\x1b[20C"); // Try to move forward 20 positions (should stop at width-1)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello    X");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello    X\n
+              \n
+              \n
+    ");
 }
 
 // Cursor Back (D command) tests
@@ -138,7 +198,11 @@ fn test_mixed_cursor_back_basic() {
     tty.stderr_write("\x1b[1D"); // Move back 1
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HellX");
+    insta::assert_snapshot!(snapshot, @r"
+    HellX     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -148,7 +212,11 @@ fn test_mixed_cursor_back_multiple() {
     tty.stderr_write("\x1b[3D"); // Move back 3
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HeXlo");
+    insta::assert_snapshot!(snapshot, @r"
+    HeXlo     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -158,7 +226,11 @@ fn test_mixed_cursor_back_no_parameter() {
     tty.stderr_write("\x1b[D"); // Move back 1 (default)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "HellX");
+    insta::assert_snapshot!(snapshot, @r"
+    HellX     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -168,7 +240,11 @@ fn test_mixed_cursor_back_bounds_check() {
     tty.stderr_write("\x1b[20D"); // Try to move back 20 positions (should stop at 0)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Xello");
+    insta::assert_snapshot!(snapshot, @r"
+    Xello     \n
+              \n
+              \n
+    ");
 }
 
 // =============================================================================
@@ -183,7 +259,11 @@ fn test_mixed_absolute_cursor_positioning() {
     tty.stderr_write("\x1b[1;1H"); // Move to top-left
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Xello");
+    insta::assert_snapshot!(snapshot, @r"
+    Xello     \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -193,7 +273,13 @@ fn test_mixed_set_cursor_to_row_col() {
     tty.stderr_write("\x1b[2;3H"); // Move to row 2, col 3
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello\nWoXld");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello     \n
+    WoXld     \n
+              \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -203,7 +289,13 @@ fn test_mixed_set_cursor_to_row_col_alt_syntax() {
     tty.stderr_write("\x1b[2;3f"); // Move to row 2, col 3 (f command)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello\nWoXld");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello     \n
+    WoXld     \n
+              \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -213,7 +305,13 @@ fn test_mixed_set_cursor_to_home_position() {
     tty.stderr_write("\x1b[H"); // Move to row 1, col 1 (default)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Xello\nWorld");
+    insta::assert_snapshot!(snapshot, @r"
+    Xello     \n
+    World     \n
+              \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -223,7 +321,13 @@ fn test_mixed_set_cursor_partial_coordinates() {
     tty.stderr_write("\x1b[2;H"); // Move to row 2, col 1 (default)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello\nXorld");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello     \n
+    Xorld     \n
+              \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -233,7 +337,18 @@ fn test_mixed_set_cursor_bounds_clamping() {
     tty.stderr_write("\x1b[20;30H"); // Try to move to row 20, col 30 (should be clamped)
     tty.stdout_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "World\n\n\n\n\n\n\n\n              X");
+    insta::assert_snapshot!(snapshot, @r"
+    World          \n
+                   \n
+                   \n
+                   \n
+                   \n
+                   \n
+                   \n
+                   \n
+                  X\n
+                   \n
+    ");
 }
 
 #[test]
@@ -247,7 +362,11 @@ fn test_mixed_alternating_cursor_movements() {
     tty.stderr_write("\x1b[1B"); // Down 1
     tty.stdout_write("C");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "AtaBt\n    C");
+    insta::assert_snapshot!(snapshot, @r"
+    AtaBt     \n
+        C     \n
+              \n
+    ");
 }
 
 #[test]
@@ -260,5 +379,9 @@ fn test_mixed_cursor_sequence_preservation() {
     tty.stdout_write("\x1b[1B"); // Down 1
     tty.stderr_write("Y");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "TeXt\n   Y");
+    insta::assert_snapshot!(snapshot, @r"
+    TeXt    \n
+       Y    \n
+            \n
+    ");
 }

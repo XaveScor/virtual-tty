@@ -14,6 +14,26 @@ impl Buffer {
         }
     }
 
+    pub fn resize_from(old_buffer: &Buffer, new_width: usize, new_height: usize) -> Self {
+        let mut new_lines = vec![vec![' '; new_width]; new_height];
+
+        // Copy existing content within the bounds of the new buffer
+        let copy_height = old_buffer.height.min(new_height);
+        let copy_width = old_buffer.width.min(new_width);
+
+        for row in 0..copy_height {
+            for col in 0..copy_width {
+                new_lines[row][col] = old_buffer.lines[row][col];
+            }
+        }
+
+        Self {
+            lines: new_lines,
+            width: new_width,
+            height: new_height,
+        }
+    }
+
     pub fn clear(&mut self) {
         self.lines = vec![vec![' '; self.width]; self.height];
     }
@@ -93,15 +113,19 @@ impl Buffer {
 
     pub fn get_snapshot(&self) -> String {
         let mut result = String::new();
-        for (i, row) in self.lines.iter().enumerate() {
+        result.push('\n');
+        for row in &self.lines {
             let line: String = row.iter().collect();
-            let trimmed = line.trim_end();
-            result.push_str(trimmed);
-            if i < self.lines.len() - 1 {
-                result.push('\n');
-            }
+            result.push_str(&line);
+            // Add \\n for visual clarity in tests to show line endings, then actual \n for line break
+            // Example output:
+            // "
+            // Hello     \n
+            // World     \n
+            //           \n
+            // "
+            result.push_str("\\n\n");
         }
-        // Remove trailing empty lines
-        result.trim_end().to_string()
+        result
     }
 }

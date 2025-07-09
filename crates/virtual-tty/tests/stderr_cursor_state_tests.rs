@@ -58,7 +58,10 @@ fn test_stderr_relative_movement_after_scroll() {
     tty.stderr_write("\x1b[1A"); // Move up 1 line
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line2X\nLine3");
+    insta::assert_snapshot!(snapshot, @r"
+    Line2X    \n
+    Line3     \n
+    ");
 }
 
 // =============================================================================
@@ -76,5 +79,9 @@ fn test_stderr_cursor_at_line_boundaries() {
     tty.stderr_write("\x1b[1A"); // Up 1
     tty.stderr_write("X");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "123X5\n678");
+    insta::assert_snapshot!(snapshot, @r"
+    123X5\n
+    678  \n
+         \n
+    ");
 }

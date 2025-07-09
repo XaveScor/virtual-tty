@@ -30,7 +30,7 @@ impl<'a> AnsiParser<'a> {
                     self.chars.next(); // consume '['
                     match self.parse_csi_sequence() {
                         Ok(command) => Ok(Some(Token::Command(command))),
-                        Err(e) => Ok(Some(Token::Invalid(format!("CSI parse error: {:?}", e)))),
+                        Err(e) => Ok(Some(Token::Invalid(format!("CSI parse error: {e:?}")))),
                     }
                 } else {
                     Ok(Some(Token::Invalid(
@@ -100,7 +100,7 @@ impl<'a> AnsiParser<'a> {
                 params.push(0);
             } else {
                 let param = part.parse::<usize>().map_err(|_| {
-                    ParseError::InvalidParameter(format!("Cannot parse parameter: {}", part))
+                    ParseError::InvalidParameter(format!("Cannot parse parameter: {part}"))
                 })?;
                 params.push(param);
             }

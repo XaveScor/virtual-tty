@@ -15,7 +15,13 @@ fn test_mixed_complex_cursor_sequence() {
     tty.stdout_write("\x1b[1D"); // Left 1 column
     tty.stderr_write("Y");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Hello X\nWorld Y\nTest");
+    insta::assert_snapshot!(snapshot, @r"
+    Hello X   \n
+    World Y   \n
+    Test      \n
+              \n
+              \n
+    ");
 }
 
 #[test]
@@ -29,10 +35,12 @@ fn test_mixed_interleaved_output() {
     tty.stderr_write("\n");
     tty.stdout_write("Exit code: 1");
     let snapshot = tty.get_snapshot();
-    assert_eq!(
-        snapshot,
-        "Command: ERROR: ls -laPermission de\nnied\n\nExit code: 1"
-    );
+    insta::assert_snapshot!(snapshot, @r"
+    Command: ERROR: ls -laPermission de\n
+    nied                               \n
+                                       \n
+    Exit code: 1                       \n
+    ");
 }
 
 #[test]
@@ -44,7 +52,11 @@ fn test_mixed_ansi_sequences() {
     tty.stderr_write("\x1b[2J"); // Clear screen
     tty.stdout_write("Cleared");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Cleared");
+    insta::assert_snapshot!(snapshot, @r"
+    Cleared        \n
+                   \n
+                   \n
+    ");
 }
 
 #[test]
@@ -55,7 +67,12 @@ fn test_mixed_multiline_output() {
     tty.stdout_write("Line 2\n");
     tty.stderr_write("Error 2");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line 1\nError 1\nLine 2\nError 2");
+    insta::assert_snapshot!(snapshot, @r"
+    Line 1      \n
+    Error 1     \n
+    Line 2      \n
+    Error 2     \n
+    ");
 }
 
 #[test]
@@ -67,7 +84,11 @@ fn test_mixed_cursor_positioning() {
     tty.stderr_write("\x1b[2;1H"); // Position 2,1
     tty.stdout_write("End");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "StMid\nEnd");
+    insta::assert_snapshot!(snapshot, @r"
+    StMid     \n
+    End       \n
+              \n
+    ");
 }
 
 #[test]
@@ -78,7 +99,11 @@ fn test_mixed_line_wrapping() {
     tty.stdout_write("That");
     tty.stderr_write("Wraps");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "LongLine\nThatWrap\ns");
+    insta::assert_snapshot!(snapshot, @r"
+    LongLine\n
+    ThatWrap\n
+    s       \n
+    ");
 }
 
 #[test]
@@ -89,7 +114,10 @@ fn test_mixed_scrolling_behavior() {
     tty.stdout_write("Line3\n");
     tty.stderr_write("Line4");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Line3\nLine4");
+    insta::assert_snapshot!(snapshot, @r"
+    Line3     \n
+    Line4     \n
+    ");
 }
 
 #[test]
@@ -101,18 +129,25 @@ fn test_mixed_empty_writes() {
     tty.stderr_write("");
     tty.stdout_write("End");
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "Start End");
+    insta::assert_snapshot!(snapshot, @r"
+    Start End \n
+              \n
+    ");
 }
 
 #[test]
 fn test_mixed_rapid_alternation() {
     let mut tty = VirtualTty::new(25, 3);
     for i in 0..5 {
-        tty.stdout_write(&format!("O{}", i));
-        tty.stderr_write(&format!("E{}", i));
+        tty.stdout_write(&format!("O{i}"));
+        tty.stderr_write(&format!("E{i}"));
     }
     let snapshot = tty.get_snapshot();
-    assert_eq!(snapshot, "O0E0O1E1O2E2O3E3O4E4");
+    insta::assert_snapshot!(snapshot, @r"
+    O0E0O1E1O2E2O3E3O4E4     \n
+                             \n
+                             \n
+    ");
 }
 
 #[test]
@@ -123,8 +158,10 @@ fn test_mixed_command_error_pattern() {
     tty.stdout_write("Usage: command [args]\n");
     tty.stderr_write("Exit: 1");
     let snapshot = tty.get_snapshot();
-    assert_eq!(
-        snapshot,
-        "$ command --option\nERROR: Invalid option\nUsage: command [args]\nExit: 1"
-    );
+    insta::assert_snapshot!(snapshot, @r"
+    $ command --option       \n
+    ERROR: Invalid option    \n
+    Usage: command [args]    \n
+    Exit: 1                  \n
+    ");
 }
