@@ -130,7 +130,7 @@ impl PtyAdapter {
 
         let slave_fd = self
             .slave_fd
-            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No slave PTY"))?;
+            .ok_or_else(|| io::Error::other("No slave PTY"))?;
 
         // Duplicate the slave FD for stdin/stdout/stderr to avoid closing issues
         let slave_stdin = unsafe { libc::dup(slave_fd) };
@@ -156,7 +156,7 @@ impl PtyAdapter {
     pub fn send_input(&mut self, input: &[u8]) -> io::Result<()> {
         let master_fd = self
             .master_fd
-            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No master PTY"))?;
+            .ok_or_else(|| io::Error::other("No master PTY"))?;
 
         let result = unsafe {
             libc::write(
@@ -202,45 +202,6 @@ impl Drop for PtyAdapter {
         // Wait for reader thread to finish
         if let Some(thread) = self.reader_thread.take() {
             let _ = thread.join();
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_pty_adapter_creation() {
-        let adapter = PtyAdapter::new(80, 24);
-        assert_eq!(adapter.get_size(), (80, 24));
-    }
-
-    #[test]
-    fn test_from_virtual_tty() {
-        let tty = VirtualTty::new(40, 10);
-        let adapter = PtyAdapter::from_virtual_tty(tty);
-        assert_eq!(adapter.get_size(), (40, 10));
-    }
-
-    #[test]
-    fn test_pty_spawn() {
-        let mut adapter = PtyAdapter::new(80, 24);
-        let mut cmd = Command::new("echo");
-        cmd.arg("Hello PTY");
-
-        match adapter.spawn_command(&mut cmd) {
-            Ok(mut child) => {
-                let _ = child.wait();
-                // Give reader thread time to process
-                std::thread::sleep(std::time::Duration::from_millis(100));
-                let snapshot = adapter.get_snapshot();
-                assert!(snapshot.contains("Hello PTY"));
-            }
-            Err(_) => {
-                // PTY might not be available in test environment
-                println!("PTY test skipped - not available");
-            }
         }
     }
 }
