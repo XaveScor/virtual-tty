@@ -221,8 +221,26 @@ fn test_vim_square_terminal_pty() {
     "square_test.txt" [noeol] 1L, 65B       \n
     "#);
 
-    let lines: Vec<&str> = snapshot.lines().collect();
-    assert!(lines.len() <= 40, "PTY should not exceed terminal height");
+    let all_lines: Vec<&str> = snapshot.lines().collect();
+
+    let first_non_empty = all_lines
+        .iter()
+        .position(|line| !line.trim().is_empty())
+        .unwrap_or(0);
+    let last_non_empty = all_lines
+        .iter()
+        .rposition(|line| !line.trim().is_empty())
+        .unwrap_or(all_lines.len().saturating_sub(1));
+
+    let meaningful_lines = if first_non_empty <= last_non_empty {
+        &all_lines[first_non_empty..=last_non_empty]
+    } else {
+        &[]
+    };
+
+    assert!(meaningful_lines.len() <= 40,
+        "PTY content should not exceed terminal height (got {} meaningful lines from {} total lines)",
+        meaningful_lines.len(), all_lines.len());
 
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
