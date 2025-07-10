@@ -1,3 +1,4 @@
+use std::io::Write;
 use virtual_tty::VirtualTty;
 
 // =============================================================================
@@ -7,10 +8,10 @@ use virtual_tty::VirtualTty;
 #[test]
 fn test_stderr_clear_line_from_cursor() {
     let mut tty = VirtualTty::new(10, 3);
-    tty.stderr_write("Hello");
-    tty.stderr_write("\x1b[3D"); // Move back 3
-    tty.stderr_write("123");
-    tty.stderr_write("\x1b[K"); // Clear to end of line
+    write!(tty.stderr, "Hello").unwrap();
+    write!(tty.stderr, "\x1b[3D").unwrap(); // Move back 3
+    write!(tty.stderr, "123").unwrap();
+    write!(tty.stderr, "\x1b[K").unwrap(); // Clear to end of line
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     He123     \n
@@ -22,10 +23,10 @@ fn test_stderr_clear_line_from_cursor() {
 #[test]
 fn test_stderr_clear_entire_line() {
     let mut tty = VirtualTty::new(10, 3);
-    tty.stderr_write("Hello\nWorld\nTest");
-    tty.stderr_write("\x1b[2A"); // Move up 2 lines
-    tty.stderr_write("\x1b[2K"); // Clear entire line
-    tty.stderr_write("New");
+    write!(tty.stderr, "Hello\nWorld\nTest").unwrap();
+    write!(tty.stderr, "\x1b[2A").unwrap(); // Move up 2 lines
+    write!(tty.stderr, "\x1b[2K").unwrap(); // Clear entire line
+    write!(tty.stderr, "New").unwrap();
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
         New   \n
@@ -37,9 +38,9 @@ fn test_stderr_clear_entire_line() {
 #[test]
 fn test_stderr_clear_from_cursor_to_end_of_screen() {
     let mut tty = VirtualTty::new(10, 4);
-    tty.stderr_write("Line1\nLine2\nLine3\nLine4");
-    tty.stderr_write("\x1b[2;3H"); // Move to row 2, col 3
-    tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
+    write!(tty.stderr, "Line1\nLine2\nLine3\nLine4").unwrap();
+    write!(tty.stderr, "\x1b[2;3H").unwrap(); // Move to row 2, col 3
+    write!(tty.stderr, "\x1b[0J").unwrap(); // Clear from cursor to end of screen
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     Line1     \n
@@ -52,9 +53,9 @@ fn test_stderr_clear_from_cursor_to_end_of_screen() {
 #[test]
 fn test_stderr_clear_from_cursor_to_end_of_screen_default() {
     let mut tty = VirtualTty::new(10, 4);
-    tty.stderr_write("Line1\nLine2\nLine3\nLine4");
-    tty.stderr_write("\x1b[2;3H"); // Move to row 2, col 3
-    tty.stderr_write("\x1b[J"); // Clear from cursor to end of screen (default)
+    write!(tty.stderr, "Line1\nLine2\nLine3\nLine4").unwrap();
+    write!(tty.stderr, "\x1b[2;3H").unwrap(); // Move to row 2, col 3
+    write!(tty.stderr, "\x1b[J").unwrap(); // Clear from cursor to end of screen (default)
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     Line1     \n
@@ -67,9 +68,9 @@ fn test_stderr_clear_from_cursor_to_end_of_screen_default() {
 #[test]
 fn test_stderr_clear_from_cursor_at_start_of_line() {
     let mut tty = VirtualTty::new(8, 3);
-    tty.stderr_write("ABCD\nEFGH\nIJKL");
-    tty.stderr_write("\x1b[2;1H"); // Move to row 2, col 1
-    tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
+    write!(tty.stderr, "ABCD\nEFGH\nIJKL").unwrap();
+    write!(tty.stderr, "\x1b[2;1H").unwrap(); // Move to row 2, col 1
+    write!(tty.stderr, "\x1b[0J").unwrap(); // Clear from cursor to end of screen
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     ABCD    \n
@@ -81,9 +82,9 @@ fn test_stderr_clear_from_cursor_at_start_of_line() {
 #[test]
 fn test_stderr_clear_from_cursor_at_end_of_line() {
     let mut tty = VirtualTty::new(8, 3);
-    tty.stderr_write("ABCD\nEFGH\nIJKL");
-    tty.stderr_write("\x1b[1;4H"); // Move to row 1, col 4 (end of first line)
-    tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
+    write!(tty.stderr, "ABCD\nEFGH\nIJKL").unwrap();
+    write!(tty.stderr, "\x1b[1;4H").unwrap(); // Move to row 1, col 4 (end of first line)
+    write!(tty.stderr, "\x1b[0J").unwrap(); // Clear from cursor to end of screen
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     ABC     \n
@@ -95,10 +96,10 @@ fn test_stderr_clear_from_cursor_at_end_of_line() {
 #[test]
 fn test_stderr_clear_from_cursor_preserves_position() {
     let mut tty = VirtualTty::new(10, 3);
-    tty.stderr_write("Hello\nWorld\nTest");
-    tty.stderr_write("\x1b[2;2H"); // Move to row 2, col 2
-    tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
-    tty.stderr_write("X"); // Should write at cursor position
+    write!(tty.stderr, "Hello\nWorld\nTest").unwrap();
+    write!(tty.stderr, "\x1b[2;2H").unwrap(); // Move to row 2, col 2
+    write!(tty.stderr, "\x1b[0J").unwrap(); // Clear from cursor to end of screen
+    write!(tty.stderr, "X").unwrap(); // Should write at cursor position
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     Hello     \n
@@ -110,9 +111,9 @@ fn test_stderr_clear_from_cursor_preserves_position() {
 #[test]
 fn test_stderr_clear_from_cursor_on_last_line() {
     let mut tty = VirtualTty::new(10, 3);
-    tty.stderr_write("Line1\nLine2\nLine3");
-    tty.stderr_write("\x1b[3D"); // Move back 3 on last line
-    tty.stderr_write("\x1b[0J"); // Clear from cursor to end of screen
+    write!(tty.stderr, "Line1\nLine2\nLine3").unwrap();
+    write!(tty.stderr, "\x1b[3D").unwrap(); // Move back 3 on last line
+    write!(tty.stderr, "\x1b[0J").unwrap(); // Clear from cursor to end of screen
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     Line1     \n

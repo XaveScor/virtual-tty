@@ -1,21 +1,29 @@
+use std::fs;
+use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
+use tempfile::TempDir;
 use virtual_tty_pty::PtyAdapter;
 
-fn create_temp_file_from_fixture(fixture_path: &str, test_name: &str) -> String {
-    let temp_file = format!("{}_{}.txt", test_name, std::process::id());
-    std::fs::copy(fixture_path, &temp_file).unwrap();
-    temp_file
+fn copy_fixture_to_dir(dir: &Path, fixture_name: &str, target_name: &str) {
+    let fixture_path = Path::new("tests/fixtures").join(fixture_name);
+    let target_path = dir.join(target_name);
+    fs::copy(&fixture_path, &target_path).unwrap();
 }
 
 #[test]
 fn test_vim_startup_pty_state() {
-    let temp_file = create_temp_file_from_fixture("tests/fixtures/simple_lines.txt", "startup");
+    let temp_dir = TempDir::new().unwrap();
+    copy_fixture_to_dir(temp_dir.path(), "simple_lines.txt", "startup_test.txt");
 
     let mut pty = PtyAdapter::new(40, 10);
     let mut child = pty
-        .spawn_command(Command::new("vim").arg(&temp_file))
+        .spawn_command(
+            Command::new("vim")
+                .arg("startup_test.txt")
+                .current_dir(temp_dir.path()),
+        )
         .unwrap();
 
     // Wait for vim to fully initialize
@@ -23,11 +31,7 @@ fn test_vim_startup_pty_state() {
 
     // PTY should capture vim's screen initialization
     let snapshot = pty.get_snapshot();
-    // Normalize the filename to handle dynamic process IDs
-    let normalized = snapshot.replace(
-        &format!("startup_{}.txt", std::process::id()),
-        "startup_PID.txt",
-    );
+    let normalized = snapshot.replace("startup_test.txt", "startup_PID.txt");
     insta::assert_snapshot!(normalized, @r#"
     Line 1                                  \n
     Line 2                                  \n
@@ -50,18 +54,20 @@ fn test_vim_startup_pty_state() {
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
     pty.wait_for_completion();
-
-    // Cleanup
-    std::fs::remove_file(&temp_file).ok();
 }
 
 #[test]
 fn test_vim_navigation_pty_cursor() {
-    let temp_file = create_temp_file_from_fixture("tests/fixtures/simple_lines.txt", "navigation");
+    let temp_dir = TempDir::new().unwrap();
+    copy_fixture_to_dir(temp_dir.path(), "simple_lines.txt", "navigation_test.txt");
 
     let mut pty = PtyAdapter::new(40, 10);
     let mut child = pty
-        .spawn_command(Command::new("vim").arg(&temp_file))
+        .spawn_command(
+            Command::new("vim")
+                .arg("navigation_test.txt")
+                .current_dir(temp_dir.path()),
+        )
         .unwrap();
     sleep(Duration::from_millis(500));
 
@@ -95,18 +101,20 @@ fn test_vim_navigation_pty_cursor() {
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
     pty.wait_for_completion();
-
-    // Cleanup
-    std::fs::remove_file(&temp_file).ok();
 }
 
 #[test]
 fn test_vim_insert_mode_pty_buffer() {
-    let temp_file = create_temp_file_from_fixture("tests/fixtures/single_line.txt", "insert");
+    let temp_dir = TempDir::new().unwrap();
+    copy_fixture_to_dir(temp_dir.path(), "single_line.txt", "insert_test.txt");
 
     let mut pty = PtyAdapter::new(40, 10);
     let mut child = pty
-        .spawn_command(Command::new("vim").arg(&temp_file))
+        .spawn_command(
+            Command::new("vim")
+                .arg("insert_test.txt")
+                .current_dir(temp_dir.path()),
+        )
         .unwrap();
     sleep(Duration::from_millis(500));
 
@@ -170,18 +178,20 @@ fn test_vim_insert_mode_pty_buffer() {
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
     pty.wait_for_completion();
-
-    // Cleanup
-    std::fs::remove_file(&temp_file).ok();
 }
 
 #[test]
 fn test_vim_delete_operations_pty() {
-    let temp_file = create_temp_file_from_fixture("tests/fixtures/basic_content.txt", "delete");
+    let temp_dir = TempDir::new().unwrap();
+    copy_fixture_to_dir(temp_dir.path(), "basic_content.txt", "delete_test.txt");
 
     let mut pty = PtyAdapter::new(40, 10);
     let mut child = pty
-        .spawn_command(Command::new("vim").arg(&temp_file))
+        .spawn_command(
+            Command::new("vim")
+                .arg("delete_test.txt")
+                .current_dir(temp_dir.path()),
+        )
         .unwrap();
     sleep(Duration::from_millis(500));
 
@@ -190,11 +200,8 @@ fn test_vim_delete_operations_pty() {
     sleep(Duration::from_millis(100));
 
     let snapshot = pty.get_snapshot();
-    // Normalize the filename to handle dynamic process IDs
-    let normalized = snapshot.replace(
-        &format!("delete_{}.txt", std::process::id()),
-        "delete_PID.txt",
-    );
+    // Normalize the filename to use stable name
+    let normalized = snapshot.replace("delete_test.txt", "delete_PID.txt");
     insta::assert_snapshot!(normalized, @r#"
     ine 1                                   \n
     Line 2                                  \n
@@ -213,11 +220,8 @@ fn test_vim_delete_operations_pty() {
     sleep(Duration::from_millis(300));
 
     let snapshot = pty.get_snapshot();
-    // Normalize the filename to handle dynamic process IDs
-    let normalized_d = snapshot.replace(
-        &format!("delete_{}.txt", std::process::id()),
-        "delete_PID.txt",
-    );
+    // Normalize the filename to use stable name
+    let normalized_d = snapshot.replace("delete_test.txt", "delete_PID.txt");
     insta::assert_snapshot!(normalized_d, @r#"
                                             \n
     Line 2                                  \n
@@ -238,11 +242,8 @@ fn test_vim_delete_operations_pty() {
     sleep(Duration::from_millis(200));
 
     let snapshot = pty.get_snapshot();
-    // Normalize the filename to handle dynamic process IDs
-    let normalized_dw = snapshot.replace(
-        &format!("delete_{}.txt", std::process::id()),
-        "delete_PID.txt",
-    );
+    // Normalize the filename to use stable name
+    let normalized_dw = snapshot.replace("delete_test.txt", "delete_PID.txt");
     insta::assert_snapshot!(normalized_dw, @r#"
                                             \n
     2                                       \n
@@ -259,18 +260,20 @@ fn test_vim_delete_operations_pty() {
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
     pty.wait_for_completion();
-
-    // Cleanup
-    std::fs::remove_file(&temp_file).ok();
 }
 
 #[test]
 fn test_vim_undo_redo_pty_state() {
-    let temp_file = create_temp_file_from_fixture("tests/fixtures/single_line.txt", "undo");
+    let temp_dir = TempDir::new().unwrap();
+    copy_fixture_to_dir(temp_dir.path(), "single_line.txt", "undo_test.txt");
 
     let mut pty = PtyAdapter::new(40, 10);
     let mut child = pty
-        .spawn_command(Command::new("vim").arg(&temp_file))
+        .spawn_command(
+            Command::new("vim")
+                .arg("undo_test.txt")
+                .current_dir(temp_dir.path()),
+        )
         .unwrap();
     sleep(Duration::from_millis(500));
 
@@ -334,24 +337,26 @@ fn test_vim_undo_redo_pty_state() {
     ~                                       \n
     ~                                       \n
     ~                                       \n
-    1 change; after #1  X seconds ago        \n
+    1 change; after #1  X seconds ago       \n
     ");
 
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
     pty.wait_for_completion();
-
-    // Cleanup
-    std::fs::remove_file(&temp_file).ok();
 }
 
 #[test]
 fn test_vim_command_mode_pty() {
-    let temp_file = create_temp_file_from_fixture("tests/fixtures/basic_content.txt", "command");
+    let temp_dir = TempDir::new().unwrap();
+    copy_fixture_to_dir(temp_dir.path(), "basic_content.txt", "command_test.txt");
 
     let mut pty = PtyAdapter::new(40, 10);
     let mut child = pty
-        .spawn_command(Command::new("vim").arg(&temp_file))
+        .spawn_command(
+            Command::new("vim")
+                .arg("command_test.txt")
+                .current_dir(temp_dir.path()),
+        )
         .unwrap();
     sleep(Duration::from_millis(500));
 
@@ -414,7 +419,4 @@ fn test_vim_command_mode_pty() {
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
     pty.wait_for_completion();
-
-    // Cleanup
-    std::fs::remove_file(&temp_file).ok();
 }

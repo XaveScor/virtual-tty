@@ -78,7 +78,68 @@ fn test_vim_huge_terminal_pty() {
     sleep(Duration::from_millis(1000));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r#"
+    Small content in huge terminal                                                                                                                                                                          \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    ~                                                                                                                                                                                                       \n
+    "huge_test.txt" [noeol] 1L, 30B                                                                                                                                                                         \n
+    "#);
 
     let start_time = std::time::Instant::now();
     for _ in 0..10 {
@@ -117,7 +178,48 @@ fn test_vim_square_terminal_pty() {
     sleep(Duration::from_millis(500));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r#"
+    Testing square terminal aspect ratio wit\n
+    h various content lengths               \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    "square_test.txt" [noeol] 1L, 65B       \n
+    "#);
 
     let lines: Vec<&str> = snapshot.lines().collect();
     assert!(lines.len() <= 40, "PTY should not exceed terminal height");
@@ -249,7 +351,18 @@ fn test_vim_binary_file_pty() {
     sleep(Duration::from_millis(500));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r#"
+    ^@^A^B^Cÿþý                             \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    "binary.bin" [noeol][converted] 1L, 10B \n
+    "#);
 
     let (row, _col) = pty.get_cursor_position();
     assert!(
@@ -281,7 +394,18 @@ fn test_vim_very_long_lines_pty() {
     sleep(Duration::from_millis(1000));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r#"
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n
+    "long_line.txt" [noeol] 1L, 5000B       \n
+    "#);
 
     pty.send_input_str("$").unwrap();
     sleep(Duration::from_millis(200));
@@ -327,7 +451,18 @@ fn test_vim_rapid_input_pty() {
     sleep(Duration::from_millis(200));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+    abcdefghijklmnopqrstuvwxyzabcdefghijklmn\n
+    opqrstuvwxyzabcdefghijklmnopqrstuvwxyzab\n
+    cdefghijklmnopqrstuvwxyzabcdefghijklmnop\n
+    qrstuvwxyzabcdefghijklmnopqrstuvwxyzabcd\n
+    efghijklmnopqrstuvwxyzabcdefghijklmnopqr\n
+    stuvwxyzabcdefghijklmnopqrstuvwxyzabcdef\n
+    ghijklmnopqrstuvwxyz                    \n
+    ~                                       \n
+    ~                                       \n
+    -- INSERT --                            \n
+    ");
 
     for _ in 0..50 {
         pty.send_input_str("x").unwrap();
@@ -335,7 +470,18 @@ fn test_vim_rapid_input_pty() {
     }
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+    abcdefghijklmnopqrstuvwxyzabcdefghijklmn\n
+    opqrstuvwxyzabcdefghijklmnopqrstuvwxyzab\n
+    cdefghijklmnopqrstuvwxyzabcdefghijklmnop\n
+    qrstuvwxyzabcdefghijklmnopqrstuvwxyzabcd\n
+    efghijklmnopqrstuvwxyzabcdefghijklmnopqr\n
+    stuvwxyzabc                             \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+                                            \n
+    ");
 
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
@@ -409,7 +555,18 @@ fn test_vim_escape_sequence_input_pty() {
     sleep(Duration::from_millis(200));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+    Text with                               \n
+    l                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    -- INSERT --                            \n
+    ");
 
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
@@ -432,7 +589,18 @@ fn test_vim_nonexistent_file_pty() {
     sleep(Duration::from_millis(500));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r#"
+                                            \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    "nonexistent.txt" [New]                 \n
+    "#);
 
     pty.send_input_str("i").unwrap();
     pty.send_input_str("New file content").unwrap();
@@ -440,7 +608,18 @@ fn test_vim_nonexistent_file_pty() {
     sleep(Duration::from_millis(100));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+    New file content                        \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    -- INSERT --                            \n
+    ");
 
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
@@ -476,7 +655,18 @@ fn test_vim_permission_error_pty() {
     sleep(Duration::from_millis(200));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    -- INSERT -- W10: Warning: Changing a re\n
+    adonly file                             \n
+    Press ENTER or type command to continue \n
+    ");
 
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();
@@ -502,7 +692,18 @@ fn test_vim_out_of_memory_simulation_pty() {
     sleep(Duration::from_millis(2000));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r#"
+    Large line content Large line content La\n
+    rge line content Large line content Larg\n
+    e line content Large line content Large \n
+    line content Large line content Large li\n
+    ne content Large line content Large line\n
+     content Large line content Large line c\n
+    ontent Large line content Large line con\n
+    tent Large line content Large line conte\n
+    nt Large line content Large line content\n
+    "memory_test.txt" [noeol] 1L, 190000B   \n
+    "#);
 
     pty.send_input_str("G").unwrap();
     sleep(Duration::from_millis(200));
@@ -539,7 +740,18 @@ fn test_vim_interrupt_handling_pty() {
     sleep(Duration::from_millis(100));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+                                            \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    Type  :qa  and pre...Enter> to exit Vim \n
+    ");
 
     pty.send_input_str("\x1b").unwrap();
     pty.send_input_str(":q!\n").unwrap();
@@ -571,7 +783,18 @@ fn test_vim_sudden_termination_pty() {
     pty.wait_for_completion();
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+    Content before termination              \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    -- INSERT --                            \n
+    ");
 }
 
 // Resource Exhaustion Edge Cases
@@ -595,7 +818,18 @@ fn test_vim_many_files_pty() {
     sleep(Duration::from_millis(1000));
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r#"
+    Content 0                               \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    "file_0.txt" [noeol] 1L, 9B             \n
+    "#);
 
     pty.send_input_str(":bn\n").unwrap();
     sleep(Duration::from_millis(100));
@@ -640,7 +874,18 @@ fn test_vim_deep_undo_history_pty() {
     }
 
     let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"");
+    insta::assert_snapshot!(snapshot, @r"
+    Change 0 Change 1 Change 2 Change 3 Chan\n
+    ge 4 Change 5 Change 6 Change 7 Change 8\n
+     Change 9                               \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    ~                                       \n
+    1 change; before #11  1 second ago      \n
+    ");
 
     pty.send_input_str(":q!\n").unwrap();
     child.wait().unwrap();

@@ -1,5 +1,5 @@
 use libc::{self, winsize};
-use std::io;
+use std::io::{self, Write};
 use std::os::unix::io::RawFd;
 use std::process::{Child, Command};
 use std::sync::{
@@ -10,10 +10,10 @@ use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 // Re-export the core VirtualTty
-pub use virtual_tty::VirtualTty;
+pub use virtual_tty::{VirtualTty, VirtualTtyStreams};
 
 pub struct PtyAdapter {
-    virtual_tty: Arc<Mutex<VirtualTty>>,
+    virtual_tty: Arc<Mutex<VirtualTtyStreams>>,
     master_fd: Option<RawFd>,
     slave_fd: Option<RawFd>,
     reader_thread: Option<JoinHandle<()>>,
@@ -31,7 +31,7 @@ impl PtyAdapter {
         }
     }
 
-    pub fn from_virtual_tty(virtual_tty: VirtualTty) -> Self {
+    pub fn from_virtual_tty(virtual_tty: VirtualTtyStreams) -> Self {
         Self {
             virtual_tty: Arc::new(Mutex::new(virtual_tty)),
             master_fd: None,
@@ -41,7 +41,7 @@ impl PtyAdapter {
         }
     }
 
-    pub fn get_virtual_tty(&self) -> Arc<Mutex<VirtualTty>> {
+    pub fn get_virtual_tty(&self) -> Arc<Mutex<VirtualTtyStreams>> {
         self.virtual_tty.clone()
     }
 
@@ -138,7 +138,8 @@ impl PtyAdapter {
                     0 => break, // EOF
                     n if n > 0 => {
                         let data = String::from_utf8_lossy(&read_buffer[..n as usize]);
-                        virtual_tty.lock().unwrap().stdout_write(&data);
+                        let mut tty = virtual_tty.lock().unwrap();
+                        write!(tty.stdout, "{}", data).unwrap();
                     }
                     -1 => {
                         let errno = unsafe { *libc::__error() };

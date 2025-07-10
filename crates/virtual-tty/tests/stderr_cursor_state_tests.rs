@@ -1,3 +1,4 @@
+use std::io::Write;
 use virtual_tty::VirtualTty;
 
 // =============================================================================
@@ -7,7 +8,7 @@ use virtual_tty::VirtualTty;
 #[test]
 fn test_stderr_cursor_position_tracking_basic() {
     let mut tty = VirtualTty::new(10, 3);
-    tty.stderr_write("Hello");
+    write!(tty.stderr, "Hello").unwrap();
     let (row, col) = tty.get_cursor_position();
     assert_eq!(row, 0);
     assert_eq!(col, 5);
@@ -22,18 +23,18 @@ fn test_stderr_cursor_position_tracking_comprehensive() {
     assert_eq!((row, col), (0, 0));
 
     // After writing
-    tty.stderr_write("Hello");
+    write!(tty.stderr, "Hello").unwrap();
     let (row, col) = tty.get_cursor_position();
     assert_eq!((row, col), (0, 5));
 
     // After newline
-    tty.stderr_write("\n");
+    write!(tty.stderr, "\n").unwrap();
     let (row, col) = tty.get_cursor_position();
     assert_eq!((row, col), (1, 0));
 
     // After cursor movement
-    tty.stderr_write("\x1b[1A"); // Up 1
-    tty.stderr_write("\x1b[2C"); // Right 2
+    write!(tty.stderr, "\x1b[1A").unwrap(); // Up 1
+    write!(tty.stderr, "\x1b[2C").unwrap(); // Right 2
     let (row, col) = tty.get_cursor_position();
     assert_eq!((row, col), (0, 2));
 }
@@ -45,7 +46,7 @@ fn test_stderr_cursor_position_tracking_comprehensive() {
 #[test]
 fn test_stderr_cursor_tracking_during_scroll() {
     let mut tty = VirtualTty::new(10, 2);
-    tty.stderr_write("Line1\nLine2\nLine3"); // This should scroll
+    write!(tty.stderr, "Line1\nLine2\nLine3").unwrap(); // This should scroll
     let (row, col) = tty.get_cursor_position();
     assert_eq!(row, 1); // Should be on last line
     assert_eq!(col, 5); // After "Line3"
@@ -54,9 +55,9 @@ fn test_stderr_cursor_tracking_during_scroll() {
 #[test]
 fn test_stderr_relative_movement_after_scroll() {
     let mut tty = VirtualTty::new(10, 2);
-    tty.stderr_write("Line1\nLine2\nLine3"); // This should scroll
-    tty.stderr_write("\x1b[1A"); // Move up 1 line
-    tty.stderr_write("X");
+    write!(tty.stderr, "Line1\nLine2\nLine3").unwrap(); // This should scroll
+    write!(tty.stderr, "\x1b[1A").unwrap(); // Move up 1 line
+    write!(tty.stderr, "X").unwrap();
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     Line2X    \n
@@ -71,13 +72,13 @@ fn test_stderr_relative_movement_after_scroll() {
 #[test]
 fn test_stderr_cursor_at_line_boundaries() {
     let mut tty = VirtualTty::new(5, 3);
-    tty.stderr_write("12345678"); // Should wrap to next line
+    write!(tty.stderr, "12345678").unwrap(); // Should wrap to next line
     let (row, col) = tty.get_cursor_position();
     assert_eq!((row, col), (1, 3)); // Should be on second line, position 3
 
     // Test cursor up from wrapped position
-    tty.stderr_write("\x1b[1A"); // Up 1
-    tty.stderr_write("X");
+    write!(tty.stderr, "\x1b[1A").unwrap(); // Up 1
+    write!(tty.stderr, "X").unwrap();
     let snapshot = tty.get_snapshot();
     insta::assert_snapshot!(snapshot, @r"
     123X5\n
