@@ -95,6 +95,63 @@ child.wait()?;
 ### Key Dependencies for Testing
 - **insta**: Required for snapshot testing in PTY validation tests
 
-**Key Principle**: Use the right tool for the testing goal - simple commands for basic ANSI validation, complex applications for real-world PTY behavior testing.
+## Critical Testing Rules
+
+### ❌ FORBIDDEN: assert!(contains) Testing
+- **NEVER use**: `assert!(snapshot.contains("text"))` or similar string matching
+- **ALWAYS use**: `insta::assert_snapshot!` for precise content validation
+- **Reason**: String matching is fragile and doesn't capture terminal state accurately
+
+### ✅ REQUIRED: Real-world Scenario Testing Only
+- **Only test with real applications**: vim, less, bash, ls, cat, etc.
+- **No mock applications**: PTY testing validates real terminal behavior
+- **Purpose**: Ensure PTY handles actual application output correctly
+
+### ✅ REQUIRED: Small Terminal Sizes for Readable Snapshots
+- **Use small terminal sizes**: 40x10, 50x12, or similar compact dimensions
+- **Avoid large terminals**: 80x24 creates unreadable snapshots
+- **Purpose**: Human-readable snapshots for easy test maintenance and debugging
+- **Example**: `PtyAdapter::new(40, 10)` instead of `PtyAdapter::new(80, 24)`
+
+### ✅ REQUIRED: Fixture Immutability and Test Independence
+- **Always copy fixtures**: Copy fixture files to temporary files for each test
+- **Never modify fixtures directly**: Preserve source fixtures for other tests
+- **Use unique temporary files**: Ensure tests don't interfere with each other
+- **Clean up temporary files**: Remove copied files after test completion
+- **Purpose**: Maintain test isolation and fixture integrity
+
+### Implementation Pattern
+```rust
+// ✅ CORRECT: Small terminal + snapshot validation + fixture copying
+fn create_temp_file_from_fixture(fixture_path: &str, test_name: &str) -> String {
+    let temp_file = format!("{}_{}.txt", test_name, std::process::id());
+    std::fs::copy(fixture_path, &temp_file).unwrap();
+    temp_file
+}
+
+#[test]
+fn test_vim_operation() {
+    let temp_file = create_temp_file_from_fixture("tests/fixtures/content.txt", "vim_test");
+    let mut pty = PtyAdapter::new(40, 10);
+    let mut child = pty.spawn_command(Command::new("vim").arg(&temp_file))?;
+    sleep(Duration::from_millis(500));
+    let snapshot = pty.get_snapshot();
+    insta::assert_snapshot!(snapshot, @"expected content");
+    
+    // Cleanup
+    std::fs::remove_file(&temp_file).ok();
+}
+
+// ❌ WRONG: Large terminal + string matching + direct fixture use
+#[test]
+fn test_vim_wrong() {
+    let mut pty = PtyAdapter::new(80, 24);
+    let mut child = pty.spawn_command(Command::new("vim").arg("tests/fixtures/content.txt"))?;
+    let snapshot = pty.get_snapshot();
+    assert!(snapshot.contains("some text")); // DON'T DO THIS
+}
+```
+
+**Key Principle**: Use the right tool for the testing goal - simple commands for basic ANSI validation, complex applications for real-world PTY behavior testing. Always follow the Critical Testing Rules above for maintainable, reliable tests.
 
 For full project context, see `../../Claude.md`.
