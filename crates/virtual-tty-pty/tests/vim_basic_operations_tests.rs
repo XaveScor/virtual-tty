@@ -334,7 +334,7 @@ fn test_vim_undo_redo_pty_state() {
     ~                                       \n
     ~                                       \n
     ~                                       \n
-    1 change; after #1  X seconds ago       \n
+    1 change; after #1  X seconds ago        \n
     ");
 
     pty.send_input_str(":q!\n").unwrap();
