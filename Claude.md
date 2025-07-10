@@ -59,3 +59,32 @@ N+4. Format all touched files: `cargo fmt`
 **Development Workflow Order**: Implement → Test → Cleanup Debug Files/Code → Lint → Format
 
 This ensures we validate functionality first before applying any style changes, making the development process cleaner and more focused. Tests validate the implementation works correctly before any code style enforcement.
+
+### Handling Time-Dependent Output in Snapshots
+
+**Problem**: Real terminal applications (especially vim) often display time-based messages like "1 second ago", "2 seconds ago", "0 seconds ago" which make tests non-deterministic.
+
+**Solution Pattern**: Use regex to replace time patterns with equivalent spaces to maintain exact formatting:
+
+```rust
+use regex::Regex;
+
+let snapshot = pty.get_snapshot();
+// Replace any time pattern with same number of spaces
+let time_regex = Regex::new(r"\d+\s+seconds?\s+ago").unwrap();
+let normalized_snapshot = time_regex.replace_all(&snapshot, |caps: &regex::Captures| {
+    " ".repeat(caps.get(0).unwrap().as_str().len())
+}).to_string();
+insta::assert_snapshot!(normalized_snapshot, @r"...");
+```
+
+**Key Principles**:
+- **Length Preservation**: Replace with exact same number of spaces to maintain line formatting
+- **Comprehensive Pattern**: `\d+\s+seconds?\s+ago` handles "1 second ago", "2 seconds ago", "0 seconds ago", etc.
+- **Deterministic Testing**: Removes timing dependency while preserving layout validation
+- **Dependency Required**: Add `regex = "1.0"` to `[dev-dependencies]` in `Cargo.toml`
+
+**Examples**:
+- "1 second ago" (12 chars) → 12 spaces
+- "2 seconds ago" (13 chars) → 13 spaces  
+- "15 seconds ago" (14 chars) → 14 spaces
