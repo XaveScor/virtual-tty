@@ -411,12 +411,22 @@ fn test_vim_very_long_lines_pty() {
     sleep(Duration::from_millis(200));
 
     let (row, _col) = pty.get_cursor_position();
-    assert_eq!(row, 0, "PTY cursor should stay on first line");
+    assert!(
+        row > 0,
+        "Cursor should be on a wrapped portion of the line when at end"
+    );
+    assert!(row < 10, "Cursor should be within terminal bounds");
 
     let start_time = std::time::Instant::now();
     pty.send_input_str("0").unwrap();
     sleep(Duration::from_millis(100));
     let nav_time = start_time.elapsed();
+
+    let (row, _col) = pty.get_cursor_position();
+    assert_eq!(
+        row, 0,
+        "Cursor should be at row 0 when at beginning of line"
+    );
 
     assert!(
         nav_time < Duration::from_millis(500),
