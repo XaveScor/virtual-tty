@@ -14,3 +14,7 @@ categories = ["development-tools::testing", "command-line-interface"]
 virtual-tty = { path = "../virtual-tty", version = "0.1.0" }
 libc.workspace = true
 
+[dev-dependencies]
+insta = "1.34"
+
+

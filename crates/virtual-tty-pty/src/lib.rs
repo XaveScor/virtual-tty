@@ -2,8 +2,12 @@ use libc::{self, winsize};
 use std::io;
 use std::os::unix::io::RawFd;
 use std::process::{Child, Command};
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex,
+};
 use std::thread::{self, JoinHandle};
+use std::time::Duration;
 
 // Re-export the core VirtualTty
 pub use virtual_tty::VirtualTty;
@@ -13,6 +17,7 @@ pub struct PtyAdapter {
     master_fd: Option<RawFd>,
     slave_fd: Option<RawFd>,
     reader_thread: Option<JoinHandle<()>>,
+    shutdown: Arc<AtomicBool>,
 }
 
 impl PtyAdapter {
@@ -22,6 +27,7 @@ impl PtyAdapter {
             master_fd: None,
             slave_fd: None,
             reader_thread: None,
+            shutdown: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -31,6 +37,7 @@ impl PtyAdapter {
             master_fd: None,
             slave_fd: None,
             reader_thread: None,
+            shutdown: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -44,6 +51,10 @@ impl PtyAdapter {
 
     pub fn get_size(&self) -> (usize, usize) {
         self.virtual_tty.lock().unwrap().get_size()
+    }
+
+    pub fn get_cursor_position(&self) -> (usize, usize) {
+        self.virtual_tty.lock().unwrap().get_cursor_position()
     }
 
     fn create_pty(&mut self) -> io::Result<()> {
@@ -97,12 +108,24 @@ impl PtyAdapter {
             None => return,
         };
 
+        // Set the master FD to non-blocking mode
+        unsafe {
+            let flags = libc::fcntl(master_fd, libc::F_GETFL);
+            libc::fcntl(master_fd, libc::F_SETFL, flags | libc::O_NONBLOCK);
+        }
+
         let virtual_tty = self.virtual_tty.clone();
+        let shutdown = self.shutdown.clone();
 
         let reader_thread = thread::spawn(move || {
             let mut read_buffer = [0u8; 4096];
 
             loop {
+                // Check if we should shutdown
+                if shutdown.load(Ordering::Relaxed) {
+                    break;
+                }
+
                 let n = unsafe {
                     libc::read(
                         master_fd,
@@ -110,11 +133,23 @@ impl PtyAdapter {
                         read_buffer.len(),
                     )
                 };
+
                 match n {
                     0 => break, // EOF
                     n if n > 0 => {
                         let data = String::from_utf8_lossy(&read_buffer[..n as usize]);
                         virtual_tty.lock().unwrap().stdout_write(&data);
+                    }
+                    -1 => {
+                        let errno = unsafe { *libc::__error() };
+                        if errno == libc::EAGAIN || errno == libc::EWOULDBLOCK {
+                            // No data available, sleep briefly and continue
+                            thread::sleep(Duration::from_millis(10));
+                            continue;
+                        } else {
+                            // Other error, break
+                            break;
+                        }
                     }
                     _ => break,
                 }
@@ -179,6 +214,15 @@ impl PtyAdapter {
 
     /// Wait for any running processes to complete and reader thread to finish
     pub fn wait_for_completion(&mut self) {
+        self.shutdown.store(true, Ordering::Relaxed);
+        if let Some(thread) = self.reader_thread.take() {
+            let _ = thread.join();
+        }
+    }
+
+    /// Stop the reader thread
+    pub fn stop_reader_thread(&mut self) {
+        self.shutdown.store(true, Ordering::Relaxed);
         if let Some(thread) = self.reader_thread.take() {
             let _ = thread.join();
         }
@@ -187,6 +231,14 @@ impl PtyAdapter {
 
 impl Drop for PtyAdapter {
     fn drop(&mut self) {
+        // Signal shutdown to reader thread
+        self.shutdown.store(true, Ordering::Relaxed);
+
+        // Wait for reader thread to finish
+        if let Some(thread) = self.reader_thread.take() {
+            let _ = thread.join();
+        }
+
         // Close PTY file descriptors
         if let Some(fd) = self.master_fd {
             unsafe {
@@ -197,11 +249,6 @@ impl Drop for PtyAdapter {
             unsafe {
                 libc::close(fd);
             }
-        }
-
-        // Wait for reader thread to finish
-        if let Some(thread) = self.reader_thread.take() {
-            let _ = thread.join();
         }
     }
 }

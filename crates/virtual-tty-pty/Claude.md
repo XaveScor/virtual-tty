@@ -65,4 +65,36 @@ child.wait()?;
 - **Use snapshots**: Capture terminal output with `get_snapshot()` and compare against expected results
 - Expect platform dependencies (requires Unix PTY APIs)
 
+## LLM Guidelines for PTY Testing
+
+### Testing Philosophy
+- **Test PTY processing capabilities**: Validate how PTY captures, processes, and applies ANSI sequences from real applications
+- **Choose tools based on testing goal**: 
+  - Simple commands (`printf`, `echo -e`) for isolated ANSI sequence validation
+  - Complex applications (`less`, `vim`, `top`) for real-world scenario testing (scrolling, paging, interactive updates)
+
+### Validation Strategy
+- **Absolute assertions over relative comparisons**: Use `assert_eq!(cursor_pos, (2, 5))` instead of `assert!(row > initial_row)`
+- **Content preservation testing**: Prove cursor commands don't modify terminal output by comparing snapshots before/after
+- **Real-world scenario validation**: Use complex apps to test behaviors like scrolling in `less`, screen updates in `top`, editing in `vim`
+
+### Application Selection Guidelines
+- **Scrolling behavior**: Use `less`, `more` to test screen scrolling and buffer management
+- **Interactive updates**: Use `top`, `htop` for dynamic content updates
+- **Complex cursor movements**: Use `vim` for advanced cursor positioning and screen manipulation
+- **Simple ANSI sequences**: Use `printf`, `echo -e` for isolated sequence testing
+
+### Threading and Process Management
+- **Always use `wait_for_completion()`**: PTY reader threads must be properly terminated to prevent hanging tests
+- **Process lifecycle**: Wait for child processes before checking results
+
+### Test Infrastructure
+- **Use fixture files**: Store test content in `tests/fixtures/` instead of temporary files
+- **Inline snapshots**: Use `insta::assert_snapshot!` for precise terminal content validation
+
+### Key Dependencies for Testing
+- **insta**: Required for snapshot testing in PTY validation tests
+
+**Key Principle**: Use the right tool for the testing goal - simple commands for basic ANSI validation, complex applications for real-world PTY behavior testing.
+
 For full project context, see `../../Claude.md`.

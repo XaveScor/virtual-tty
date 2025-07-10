@@ -60,6 +60,7 @@ dependencies = [
 name = "virtual-tty-pty"
 version = "0.1.0"
 dependencies = [
+ "insta",
  "libc",
  "virtual-tty",
 ]
