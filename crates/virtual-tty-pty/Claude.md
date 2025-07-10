@@ -20,6 +20,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 **See**: The comprehensive test suite in `tests/` directory for usage patterns.
 
+**Documentation**: 
+- [TESTING_PATTERNS.md](TESTING_PATTERNS.md) - PTY testing best practices and patterns
+- [SNAPSHOT_MANAGEMENT.md](SNAPSHOT_MANAGEMENT.md) - Inline snapshot requirements and management
+
 ## Usage Patterns
 
 ### Running Real Commands
@@ -113,45 +117,73 @@ child.wait()?;
 - **Purpose**: Human-readable snapshots for easy test maintenance and debugging
 - **Example**: `PtyAdapter::new(40, 10)` instead of `PtyAdapter::new(80, 24)`
 
-### ✅ REQUIRED: Fixture Immutability and Test Independence
-- **Always copy fixtures**: Copy fixture files to temporary files for each test
-- **Never modify fixtures directly**: Preserve source fixtures for other tests
-- **Use unique temporary files**: Ensure tests don't interfere with each other
-- **Clean up temporary files**: Remove copied files after test completion
-- **Purpose**: Maintain test isolation and fixture integrity
+### ✅ REQUIRED: Inline Snapshots Only
+- **ALL snapshots MUST be inline**: Use `@"content"` format, no external .snap files
+- **Example**: `insta::assert_snapshot!(snapshot, @r"expected content");`
+- **Regeneration**: Use `@""` to force regeneration, then `cargo insta accept`
+- **Verification**: `find . -name "*.snap" | wc -l` should return 0
+
+### ✅ REQUIRED: Temp Directory Management
+- **Use tempfile crate**: `TempDir::new().unwrap()` for OS-agnostic temp directories
+- **Copy fixtures to temp**: Never create inline content, always copy from `tests/fixtures/`
+- **Set working directory**: Vim runs from temp dir using `.current_dir(temp_dir.path())`
+- **Stable filenames**: Use consistent names like `test_visual.txt`, not process IDs
 
 ### Implementation Pattern
 ```rust
-// ✅ CORRECT: Small terminal + snapshot validation + fixture copying
-fn create_temp_file_from_fixture(fixture_path: &str, test_name: &str) -> String {
-    let temp_file = format!("{}_{}.txt", test_name, std::process::id());
-    std::fs::copy(fixture_path, &temp_file).unwrap();
-    temp_file
+use tempfile::TempDir;
+
+fn copy_fixture_to_dir(dir: &Path, fixture_name: &str, target_name: &str) {
+    let fixture_path = Path::new("tests/fixtures").join(fixture_name);
+    let target_path = dir.join(target_name);
+    fs::copy(&fixture_path, &target_path).unwrap();
 }
 
+// ✅ CORRECT: TempDir + fixture copying + inline snapshots + stable filenames
 #[test]
 fn test_vim_operation() {
-    let temp_file = create_temp_file_from_fixture("tests/fixtures/content.txt", "vim_test");
-    let mut pty = PtyAdapter::new(40, 10);
-    let mut child = pty.spawn_command(Command::new("vim").arg(&temp_file))?;
-    sleep(Duration::from_millis(500));
-    let snapshot = pty.get_snapshot();
-    insta::assert_snapshot!(snapshot, @"expected content");
+    let temp_dir = TempDir::new().unwrap();
+    copy_fixture_to_dir(temp_dir.path(), "multiline_content.txt", "test_visual.txt");
     
-    // Cleanup
-    std::fs::remove_file(&temp_file).ok();
+    let mut pty = PtyAdapter::new(40, 10);
+    let mut child = pty.spawn_command(
+        &mut Command::new("vim")
+            .arg("test_visual.txt")
+            .current_dir(temp_dir.path()),
+    ).unwrap();
+    sleep(Duration::from_millis(500));
+    
+    let snapshot = pty.get_snapshot();
+    insta::assert_snapshot!(snapshot, @r"
+    First line of text                      \n
+    Second line with more content           \n
+    ~                                       \n
+    -- VISUAL --                            \n
+    ");
+    
+    pty.send_input_str("\x1b:q!\n").unwrap();
+    child.wait().unwrap();
+    pty.wait_for_completion();
+    // TempDir automatically cleans up
 }
 
-// ❌ WRONG: Large terminal + string matching + direct fixture use
+// ❌ WRONG: Current dir + process IDs + external snapshots + string matching
 #[test]
 fn test_vim_wrong() {
-    let mut pty = PtyAdapter::new(80, 24);
-    let mut child = pty.spawn_command(Command::new("vim").arg("tests/fixtures/content.txt"))?;
+    let temp_file = format!("test_{}.txt", std::process::id()); // Process ID = unstable
+    let mut pty = PtyAdapter::new(80, 24); // Too large
+    let mut child = pty.spawn_command(Command::new("vim").arg(&temp_file))?; // Current dir
     let snapshot = pty.get_snapshot();
-    assert!(snapshot.contains("some text")); // DON'T DO THIS
+    insta::assert_snapshot!(snapshot); // External .snap file
+    assert!(snapshot.contains("some text")); // String matching
 }
 ```
 
 **Key Principle**: Use the right tool for the testing goal - simple commands for basic ANSI validation, complex applications for real-world PTY behavior testing. Always follow the Critical Testing Rules above for maintainable, reliable tests.
+
+## Additional Resources
+
+- **[TESTING_PATTERNS.md](TESTING_PATTERNS.md)** - Complete guide to PTY testing patterns and best practices
+- **[SNAPSHOT_MANAGEMENT.md](SNAPSHOT_MANAGEMENT.md)** - Detailed inline snapshot requirements and management guide
 
 For full project context, see `../../Claude.md`.

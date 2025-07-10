@@ -1,0 +1,23 @@
+Header 1
+  Subitem 1
+  Subitem 2
+    Sub-subitem 1
+    Sub-subitem 2
+  Subitem 3
+Header 2
+  Another item
+  More content
+    Nested item 1
+    Nested item 2
+      Deep nested item
+      Another deep item
+  Final subitem
+Header 3
+  Section content
+  Additional data
+    More nested content
+    Extended information
+      Very deep nesting
+      Deep content example
+    Back to normal nesting
+  End of section

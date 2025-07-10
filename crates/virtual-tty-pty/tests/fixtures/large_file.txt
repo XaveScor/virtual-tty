@@ -1,0 +1,100 @@
+Line 1: This is the first line of the large file for testing performance
+Line 2: Testing how PTY handles large files with many lines
+Line 3: Each line contains different content for validation
+Line 4: Performance testing requires substantial content
+Line 5: PTY should handle this efficiently
+Line 6: Vim operations on large files stress test the system
+Line 7: Scrolling through large content is important
+Line 8: Buffer management becomes critical with size
+Line 9: ANSI sequence processing with large data
+Line 10: Memory usage should remain reasonable
+Line 11: Cursor tracking accuracy with many lines
+Line 12: Search operations across large content
+Line 13: Visual mode selection with extensive text
+Line 14: Replace operations on large datasets
+Line 15: Folding behavior with substantial content
+Line 16: Syntax highlighting performance implications
+Line 17: Tab operations with large buffers
+Line 18: Window splitting with large files
+Line 19: Macro playback across extensive content
+Line 20: Command completion with large context
+Line 21: History navigation with substantial data
+Line 22: Error handling with large file operations
+Line 23: Terminal emulation stress testing
+Line 24: PTY reader thread performance
+Line 25: Background processing efficiency
+Line 26: Large file rendering capabilities
+Line 27: Screen update optimization
+Line 28: Memory allocation patterns
+Line 29: Garbage collection implications
+Line 30: Thread safety with large data
+Line 31: Concurrent access patterns
+Line 32: Lock contention with extensive operations
+Line 33: Buffer overflow protection
+Line 34: Input validation with large content
+Line 35: Output processing efficiency
+Line 36: ANSI code parsing performance
+Line 37: Color sequence handling at scale
+Line 38: Cursor positioning accuracy
+Line 39: State management consistency
+Line 40: Error recovery mechanisms
+Line 41: Timeout handling with large operations
+Line 42: Resource cleanup efficiency
+Line 43: File descriptor management
+Line 44: Process lifecycle handling
+Line 45: Signal handling robustness
+Line 46: Exception safety guarantees
+Line 47: Data integrity maintenance
+Line 48: Consistency across operations
+Line 49: Reliability under stress
+Line 50: Performance benchmarking baseline
+Line 51: Continuation of performance testing content
+Line 52: Extended content for thorough validation
+Line 53: Additional lines for comprehensive testing
+Line 54: More content to stress test the system
+Line 55: Ensuring adequate test coverage
+Line 56: Performance validation continues
+Line 57: Large file handling verification
+Line 58: Extended testing scenarios
+Line 59: Comprehensive validation approach
+Line 60: Stress testing methodology
+Line 61: Performance measurement baseline
+Line 62: Extended content for validation
+Line 63: Thorough testing approach
+Line 64: Comprehensive test coverage
+Line 65: Performance validation continues
+Line 66: Extended testing scenarios
+Line 67: Large file handling verification
+Line 68: Stress testing methodology
+Line 69: Performance measurement baseline
+Line 70: Comprehensive validation approach
+Line 71: Extended content for validation
+Line 72: Thorough testing approach
+Line 73: Comprehensive test coverage
+Line 74: Performance validation continues
+Line 75: Extended testing scenarios
+Line 76: Large file handling verification
+Line 77: Stress testing methodology
+Line 78: Performance measurement baseline
+Line 79: Comprehensive validation approach
+Line 80: Extended content for validation
+Line 81: Thorough testing approach
+Line 82: Comprehensive test coverage
+Line 83: Performance validation continues
+Line 84: Extended testing scenarios
+Line 85: Large file handling verification
+Line 86: Stress testing methodology
+Line 87: Performance measurement baseline
+Line 88: Comprehensive validation approach
+Line 89: Extended content for validation
+Line 90: Thorough testing approach
+Line 91: Comprehensive test coverage
+Line 92: Performance validation continues
+Line 93: Extended testing scenarios
+Line 94: Large file handling verification
+Line 95: Stress testing methodology
+Line 96: Performance measurement baseline
+Line 97: Comprehensive validation approach
+Line 98: Extended content for validation
+Line 99: Thorough testing approach
+Line 100: Final line of the large test file
