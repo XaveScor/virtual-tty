@@ -1,0 +1,3 @@
+ASCII text
+UTF-8: café résumé
+Latin-1: café résumé (different encoding)

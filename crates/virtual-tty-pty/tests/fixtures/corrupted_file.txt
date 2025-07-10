@@ -1,0 +1,3 @@
+Normal content
+[binary data: 0x00, 0x01, 0xFF]
+More normal content
