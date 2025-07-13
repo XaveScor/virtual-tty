@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "crates/virtual-tty",
-    "crates/virtual-tty-pty"
+    "crates/virtual-tty-pty",
+    "crates/virtual-tty-wasm"
 ]
 resolver = "2"
 

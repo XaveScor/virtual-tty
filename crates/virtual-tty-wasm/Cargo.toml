@@ -1,0 +1,30 @@
+[package]
+name = "virtual-tty-wasm"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "WebAssembly bindings for virtual-tty library"
+keywords = ["terminal", "tty", "testing", "wasm", "webassembly"]
+categories = ["development-tools::testing", "wasm"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-mutable-globals"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[build-dependencies]
+wasm-pack = "0.13.1"
+
+[dependencies]
+virtual-tty = { path = "../virtual-tty" }
+wasm-bindgen = "0.2"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "console",
+]

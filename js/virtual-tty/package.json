@@ -1,0 +1,32 @@
+{
+  "name": "virtual-tty",
+  "private": true,
+  "version": "0.1.0",
+  "description": "JavaScript bindings for Virtual TTY - test terminal applications without real terminals",
+  "exports": "./index.ts",
+  "scripts": {
+    "build": "smartbundle"
+  },
+  "keywords": ["terminal", "tty", "testing", "cli", "ansi", "wasm", "emulator"],
+  "author": "Andrew Vassilyev <xavescor@xavescor.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xavescor/virtual-tty.git",
+    "directory": "js/virtual-tty"
+  },
+  "packageManager": "pnpm@10.12.4",
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "smartbundle": "0.15.0-alpha.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@types/node": "^18.19.118",
+    "virtual-tty-wasm": "^0.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
